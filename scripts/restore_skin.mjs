@@ -57,7 +57,8 @@ async function evalInPage(wsUrl, code) {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(wsUrl);
     let id = 1;
-    ws.on("open", () => {
+
+    const onOpen = () => {
       ws.send(JSON.stringify({
         id: id++,
         method: "Runtime.evaluate",
@@ -67,16 +68,35 @@ async function evalInPage(wsUrl, code) {
           awaitPromise: true
         }
       }));
-    });
-    ws.on("message", (data) => {
+    };
+
+    const onMessage = (eventOrData) => {
+      const data = eventOrData?.data !== undefined ? eventOrData.data : eventOrData;
       const msg = JSON.parse(data.toString());
       if (msg.id === 1) {
-        ws.close();
+        try { ws.close(); } catch (e) {}
         if (msg.error) reject(msg.error);
         else resolve(msg.result?.result?.value);
       }
-    });
-    ws.on("error", reject);
+    };
+
+    const onError = (err) => {
+      reject(err);
+    };
+
+    if (typeof ws.on === 'function') {
+      ws.on("open", onOpen);
+      ws.on("message", onMessage);
+      ws.on("error", onError);
+    } else if (typeof ws.addEventListener === 'function') {
+      ws.addEventListener("open", onOpen);
+      ws.addEventListener("message", onMessage);
+      ws.addEventListener("error", onError);
+    } else {
+      ws.onopen = onOpen;
+      ws.onmessage = onMessage;
+      ws.onerror = onError;
+    }
   });
 }
 
