@@ -749,51 +749,67 @@ async function main() {
     process.exit(1);
   }
 
-  const page = targets.find(t => t.type === "page");
-  if (!page) {
+  const pages = targets.filter(t => t.type === "page" && t.webSocketDebuggerUrl && !t.url?.startsWith("devtools://"));
+  if (pages.length === 0) {
     console.error(`❌ 端口 ${port} 上未找到 Antigravity 交互页面。`);
     process.exit(1);
   }
-  console.log(`🎯 命中交互窗口:「${page.title}」`);
 
-  // 3. Inject skin
+  // 3. Inject skin into all valid window pages
   const payload = JSON.stringify({ css, themeName, tagline });
-  const res = await evalInPage(page.webSocketDebuggerUrl, `(() => {
-    const data = ${payload};
-    
-    // Clean up lingering inline styles on chat containers
-    const chatContainers = document.querySelectorAll('div[class*="mx-auto"], div[class*="md-table-bleed"] > div');
-    chatContainers.forEach(el => {
-      if (el.getAttribute("style")) el.removeAttribute("style");
-    });
+  let injectedCount = 0;
 
-    // 1. Remove old skin
-    const oldStyle = document.getElementById("antigravity-dream-skin-style");
-    if (oldStyle) oldStyle.remove();
-    const oldBg = document.getElementById("antigravity-dream-skin-bg");
-    if (oldBg) oldBg.remove();
-    const oldWm = document.getElementById("dream-skin-watermark");
-    if (oldWm) oldWm.remove();
+  for (const page of pages) {
+    try {
+      console.log(`🎯 命中交互窗口:「${page.title || page.url}」`);
+      const res = await evalInPage(page.webSocketDebuggerUrl, `(() => {
+        const data = ${payload};
+        
+        if (!document.body || !document.head) {
+          return { success: false, notReady: true };
+        }
 
-    // 2. Inject Background
-    const bgDiv = document.createElement("div");
-    bgDiv.id = "antigravity-dream-skin-bg";
-    document.body.prepend(bgDiv);
+        // Clean up lingering inline styles on chat containers
+        const chatContainers = document.querySelectorAll('div[class*="mx-auto"], div[class*="md-table-bleed"] > div');
+        chatContainers.forEach(el => {
+          if (el.getAttribute("style")) el.removeAttribute("style");
+        });
 
-    // 3. Inject CSS
-    const styleEl = document.createElement("style");
-    styleEl.id = "antigravity-dream-skin-style";
-    styleEl.textContent = data.css;
-    document.head.appendChild(styleEl);
+        // 1. Remove old skin
+        const oldStyle = document.getElementById("antigravity-dream-skin-style");
+        if (oldStyle) oldStyle.remove();
+        const oldBg = document.getElementById("antigravity-dream-skin-bg");
+        if (oldBg) oldBg.remove();
+        const oldWm = document.getElementById("dream-skin-watermark");
+        if (oldWm) oldWm.remove();
 
-    return {
-      success: true,
-      bg: Boolean(document.getElementById("antigravity-dream-skin-bg")),
-      style: Boolean(document.getElementById("antigravity-dream-skin-style"))
-    };
-  })()`);
+        // 2. Inject Background
+        const bgDiv = document.createElement("div");
+        bgDiv.id = "antigravity-dream-skin-bg";
+        document.body.prepend(bgDiv);
 
-  if (res && res.success) {
+        // 3. Inject CSS
+        const styleEl = document.createElement("style");
+        styleEl.id = "antigravity-dream-skin-style";
+        styleEl.textContent = data.css;
+        document.head.appendChild(styleEl);
+
+        return {
+          success: true,
+          bg: Boolean(document.getElementById("antigravity-dream-skin-bg")),
+          style: Boolean(document.getElementById("antigravity-dream-skin-style"))
+        };
+      })()`);
+
+      if (res && res.success) {
+        injectedCount++;
+      }
+    } catch (e) {
+      console.error(`⚠️ 窗口「${page.title}」注入跳过:`, e.message);
+    }
+  }
+
+  if (injectedCount > 0) {
     console.log(`✨ 换肤成功！已注入主题:【${themeName}】（标语: ${tagline}）`);
     // 持久化当前激活的主题配置，供后台守护进程开机/重启自动注入
     const activeThemePath = path.join(__dirname, "../active_theme.json");
@@ -812,7 +828,7 @@ async function main() {
       }, null, 2));
     } catch (e) {}
   } else {
-    console.error("❌ 注入返回值异常:", res);
+    console.error("❌ 注入失败，页面可能正在加载中。");
   }
 }
 

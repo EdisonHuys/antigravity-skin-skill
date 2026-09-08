@@ -118,7 +118,7 @@ function runApplySkin(themeConfig) {
     if (themeConfig.blur != null) args.push("--blur", String(themeConfig.blur));
     if (themeConfig.opacity != null) args.push("--opacity", String(themeConfig.opacity));
 
-    console.log(`[Daemon] 🚀 自动唤醒并注入主题: ${themeConfig.theme || themeConfig.name || "pink-hanfu"}`);
+    console.log(`[Daemon ${new Date().toLocaleTimeString()}] 🚀 自动唤醒并注入主题: ${themeConfig.theme || themeConfig.name || "pink-hanfu"}`);
     const proc = spawn(process.execPath, args, { stdio: "inherit" });
     proc.on("close", resolve);
     proc.on("error", (err) => {
@@ -134,13 +134,12 @@ async function checkAndApply() {
   if (isInjecting) return;
 
   const activeThemePath = path.join(__dirname, "../active_theme.json");
-  if (!fs.existsSync(activeThemePath)) return;
+  let themeConfig = { theme: "pink-hanfu", enabled: true };
 
-  let themeConfig;
-  try {
-    themeConfig = JSON.parse(fs.readFileSync(activeThemePath, "utf8"));
-  } catch (e) {
-    return;
+  if (fs.existsSync(activeThemePath)) {
+    try {
+      themeConfig = JSON.parse(fs.readFileSync(activeThemePath, "utf8"));
+    } catch (e) {}
   }
 
   if (themeConfig.enabled === false) return;
@@ -150,7 +149,7 @@ async function checkAndApply() {
 
   try {
     const targets = await getTargets(port);
-    const pages = targets.filter(t => t.type === "page" && t.webSocketDebuggerUrl);
+    const pages = targets.filter(t => t.type === "page" && t.webSocketDebuggerUrl && !t.url?.startsWith("devtools://"));
 
     for (const page of pages) {
       try {
@@ -171,7 +170,7 @@ async function checkAndApply() {
   }
 }
 
-console.log("🌸 Antigravity Skin 自动常驻守护进程已启动，正在监控应用启动与窗口事件...");
+console.log(`[Daemon ${new Date().toLocaleTimeString()}] 🌸 Antigravity Skin 自动常驻守护进程已启动，正在监控应用启动与窗口事件...`);
 
 checkAndApply();
-setInterval(checkAndApply, 2000);
+setInterval(checkAndApply, 1500);
