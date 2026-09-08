@@ -795,6 +795,22 @@ async function main() {
 
   if (res && res.success) {
     console.log(`✨ 换肤成功！已注入主题:【${themeName}】（标语: ${tagline}）`);
+    // 持久化当前激活的主题配置，供后台守护进程开机/重启自动注入
+    const activeThemePath = path.join(__dirname, "../active_theme.json");
+    try {
+      fs.writeFileSync(activeThemePath, JSON.stringify({
+        theme: options.theme,
+        image: options.image,
+        name: themeName,
+        tagline: tagline,
+        focusX,
+        focusY,
+        blur: options.blur,
+        opacity: options.opacity,
+        enabled: true,
+        updatedAt: new Date().toISOString()
+      }, null, 2));
+    } catch (e) {}
   } else {
     console.error("❌ 注入返回值异常:", res);
   }

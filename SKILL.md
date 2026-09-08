@@ -63,7 +63,19 @@ node scripts/apply_skin.mjs --image "/path/to/your/wallpaper.jpg" --name "自定
 * `--opacity <0-1>`：毛玻璃底色不透明度（默认 `0.18`）。
 * `--port <number>`：显式指定 Antigravity 调试端口（若省略则自动探测）。
 
-### 3. 一键还原官方原生外观
+### 3. 开机与重启自动注入（常驻守护进程）
+
+安装常驻后台守护服务后，每次打开 Antigravity 或重启 Mac，均会自动注入您当前使用的主题：
+
+```bash
+# 一键安装常驻守护服务 (macOS LaunchAgent)
+./scripts/install_daemon.sh
+
+# 如需卸载常驻守护服务
+./scripts/uninstall_daemon.sh
+```
+
+### 4. 一键还原官方原生外观
 
 任何时候无需重启软件，均可秒级卸载注入的样式与背景：
 
@@ -71,7 +83,7 @@ node scripts/apply_skin.mjs --image "/path/to/your/wallpaper.jpg" --name "自定
 node scripts/restore_skin.mjs
 ```
 
-### 4. 查看当前所有可用预设主题
+### 5. 查看当前所有可用预设主题
 
 ```bash
 node scripts/list_themes.mjs

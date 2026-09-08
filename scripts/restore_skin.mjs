@@ -139,6 +139,12 @@ async function main() {
 
   if (res && res.success) {
     console.log("✅ 成功还原！Antigravity 2.0 已恢复官方默认原生外观。");
+    const activeThemePath = path.join(__dirname, "../active_theme.json");
+    try {
+      if (fs.existsSync(activeThemePath)) {
+        fs.writeFileSync(activeThemePath, JSON.stringify({ enabled: false, restoredAt: new Date().toISOString() }, null, 2));
+      }
+    } catch (e) {}
   } else {
     console.error("❌ 还原失败:", res);
   }
