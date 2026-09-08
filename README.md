@@ -46,19 +46,24 @@ node scripts/list_themes.mjs
 
 # 一键还原官方原生外观
 node scripts/restore_skin.mjs
+
+# 安装开机与重启常驻自动注入服务 (macOS LaunchAgent)
+./scripts/install_daemon.sh
+
+# 如需卸载常驻守护服务
+./scripts/uninstall_daemon.sh
 ```
 
-### 2. 作为 Antigravity 技能集成
+### 2. 作为 Antigravity 全局/工作区技能集成
 
-将本仓库克隆或复制至您的工作区技能目录：
 ```bash
-# 安装至当前工作区技能目录
-mkdir -p .agent/skills/antigravity-skin
-cp -r antigravity-skin-skill/* .agent/skills/antigravity-skin/
+# 全局安装（所有工作区通用）
+git clone https://github.com/EdisonHuys/antigravity-skin-skill.git ~/.gemini/config/skills/antigravity-skin
 ```
 安装后，在 Antigravity 聊天中即可直接通过自然语言触发：
 - *“帮我切换到粉蝶华裳壁纸”*
 - *“换个背景看看”*
+- *“重启后自动保持皮肤”*
 - *“还原默认皮肤”*
 
 ---
@@ -72,6 +77,9 @@ antigravity-skin-skill/
 ├── scripts/
 │   ├── apply_skin.mjs        # 核心：CDP 样式与壁纸热注入脚本
 │   ├── restore_skin.mjs      # 核心：皮肤卸载与官方默认外观还原脚本
+│   ├── daemon.mjs            # 守护进程：监听应用启动并自动注入激活主题
+│   ├── install_daemon.sh     # 守护服务安装脚本 (macOS LaunchAgent)
+│   ├── uninstall_daemon.sh   # 守护服务卸载脚本
 │   └── list_themes.mjs       # 工具：扫描并列出本地主题库
 ├── themes/
 │   ├── pink-hanfu/           # 预设主题：粉蝶华裳 16:9 全景国风
