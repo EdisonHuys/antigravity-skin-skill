@@ -48,14 +48,13 @@ Antigravity 2.0 桌面客户端采用 Electron / Chromium 渲染引擎。其在�
   * 仅在内层内容容器（`div[class*="md-table-bleed"] > div[class*="mx-auto"]`）注入 `padding-bottom: 80px !important;`。
   * 视口顶部配置 `scroll-padding-top: 16px !important;`。
 
-### 5. 新消息发送防顶出上边界 (Anti-Overflow on Submit)
-* **DOM 特性**：新消息发送瞬间，轮次容器内尚未生成助手回复，其直接父级高度仅等于用户气泡自身高度。
+### 5. 对话流自然时序线性排列 (Natural Linear Chat Flow)
+* **DOM 特性**：Antigravity 原生使用 `position: sticky` 尝试让用户消息吸顶，但当聊天流滚动或包含块高度变化时，Sticky 元素会在其包含块内持续滞留。
 * **致命陷阱**：
-  * 外层 `flex items-start` 导致轮次子容器无法自动拉伸，当自动贴底滚动触发时，未拉伸的父级底部直接拖拽吸顶气泡（`position: sticky` 不能超出包含块边界），导致消息被硬生生顶出滚动视口上边界，顶部边框、圆角与图片缩略图被直接截断切掉。
+  * 若轮次父容器具有高度或滚动偏移，Sticky 用户消息会滞留在容器底部，而 AI 回复（非 Sticky，处于正常流）会向上滚动，导致 AI 回复文字被直接推移到用户提问上方，造成极度反直觉的“回复出现在提问上面”的颠倒错乱。
 * **标准方案**：
-  * 设置 `div.flex.items-start { align-items: stretch !important; }`。
-  * 为轮次容器注入最小高度兜底：`div[class*="group"][class*="scroll-mt-"] { min-height: calc(100cqh - 100px) !important; flex: 1 1 auto !important; }`。
-  * 为吸顶气泡设置 10px 优雅下沉呼吸留白：`div[class*="sticky"] { top: 10px !important; }`，彻底杜绝紧贴或穿越顶栏。
+  * 强制将用户消息设为标准文档流：`div.sticky.top-0, div[role="article"][aria-label="用户消息"] { position: static !important; }`。
+  * 彻底移除轮次容器的强制最小高度，保证会话按照“用户提问在上、AI 回复在下”的绝对时序严密排列，杜绝任何位移倒挂与穿透重叠。
 
 ### 6. 选项卡片 Tailwind 类名避坑与防抖动悬停
 * **React 底层结构**：未选中态包含 `hover:bg-secondary`，选中态包含 `bg-secondary`。

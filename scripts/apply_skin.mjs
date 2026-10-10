@@ -277,14 +277,14 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     margin-right: auto !important;
   }
 
-  /* 轮次容器自适应拉伸与最小高度兜底，杜绝新消息刚发送时被底部 padding 和父容器提拉顶出上边界 */
+  /* 轮次与用户消息自然流布局：解除强制最小高度，确保内容按序紧凑自然流动 */
   div.flex.items-start {
-    align-items: stretch !important;
+    align-items: flex-start !important;
   }
   div.flex.items-start > div[class*="group"][class*="scroll-mt-"],
   div[class*="group"][class*="scroll-mt-"] {
-    min-height: calc(100cqh - 100px) !important;
-    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    flex: none !important;
     width: 100% !important;
   }
 
@@ -305,9 +305,13 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     opacity: 0 !important;
   }
 
-  /* 吸顶气泡保留 10px 优雅呼吸间距，杜绝紧贴或穿越顶栏面包屑 */
-  div[class*="sticky"] {
-    top: 10px !important;
+  /* 用户提问气泡恢复标准线性流 (Static / Normal Flow)：
+     彻底杜绝 Sticky 滞留导致 AI 回复文字被滚动到提问上方或重叠穿透 */
+  div.sticky.top-0,
+  div[role="article"][aria-label="用户消息"],
+  div[class*="sticky"][class*="top-"] {
+    position: static !important;
+    top: auto !important;
     background: transparent !important;
     background-color: transparent !important;
   }

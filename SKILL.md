@@ -55,8 +55,8 @@ description: >-
    * 强制解除客户端自带的 `max-h-[10vh]` 截断与 `mask-image: linear-gradient`，防止用户长提问或带图消息下半截被吞。
 4. **主滚动容器安全留白与抗闪烁（Anti-Jitter Safe Zone）**：
    * 视口自身保持 `padding-bottom: 0px !important`，仅在内层内容容器设置 `padding-bottom: 80px !important`，杜绝自动贴底滚动与双重 padding 产生的振荡闪烁。
-5. **新消息发送防顶出上边界（Anti-Overflow on Submit）**：
-   * 轮次外层 `flex items-start` 必须配合子容器 `min-height: calc(100cqh - 100px) !important` 强制拉伸，防止刚发送消息时父级高度过矮拖拽吸顶气泡穿透顶部视口；为吸顶气泡保留 `top: 10px !important` 优雅呼吸空间。
+5. **对话流自然时序线性排列（Natural Linear Chat Flow）**：
+   * 必须将用户提问气泡恢复为标准静态流（`position: static !important`），杜绝原生 Sticky 滞留与轮次父级高度导致的 AI 回复文字被推移到提问上方等颠倒错乱。
 6. **快捷指令菜单高斯聚焦（Slash Popup Blur Isolation）**：
    * 输入框触发的 `/` 斜杠命令与技能菜单（`bottom-full`）必须配置深色高聚焦磨砂（`blur(28px)`），防止无底色与工作区文字“叠罗汉”。
 
