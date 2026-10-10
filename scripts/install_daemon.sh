@@ -1,9 +1,20 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLIST_PATH="$HOME/Library/LaunchAgents/com.antigravity.skin-daemon.plist"
-SCRIPT_PATH="$HOME/.gemini/config/skills/antigravity-skin/scripts/daemon.mjs"
+
+if [ -n "$1" ]; then
+    SCRIPT_PATH="$1"
+elif [ -f "$HOME/.gemini/config/skills/antigravity-skin/scripts/daemon.mjs" ]; then
+    SCRIPT_PATH="$HOME/.gemini/config/skills/antigravity-skin/scripts/daemon.mjs"
+else
+    SCRIPT_PATH="$SCRIPT_DIR/daemon.mjs"
+fi
+
 NODE_BIN=$(which node || echo "/opt/homebrew/bin/node")
+
+mkdir -p "$HOME/Library/LaunchAgents"
 
 # Unload old plist if exists
 if [ -f "$PLIST_PATH" ]; then

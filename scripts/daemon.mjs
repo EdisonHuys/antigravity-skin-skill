@@ -4,13 +4,30 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 
+import { createRequire } from "node:module";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
 
 let WebSocket;
 try {
   WebSocket = globalThis.WebSocket;
 } catch (e) {}
+
+if (!WebSocket) {
+  const wsPaths = [
+    "ws",
+    "/Users/mac/.nvm/versions/node/v18.0.0/lib/node_modules/@vue/cli-service/node_modules/webpack-dev-server/node_modules/ws",
+    "/usr/local/lib/node_modules/ws"
+  ];
+  for (const p of wsPaths) {
+    try {
+      WebSocket = require(p);
+      if (WebSocket) break;
+    } catch (e) {}
+  }
+}
 
 function detectPort() {
   const portFile = path.join(process.env.HOME || "/Users/mac", "Library/Application Support/Antigravity/DevToolsActivePort");

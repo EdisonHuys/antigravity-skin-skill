@@ -1,6 +1,6 @@
 # Antigravity 2.0 换肤技术解析与样式规范
 
-本文档详述 Antigravity 2.0 桌面端换肤的底层实现机理、DOM 结构与样式避坑指南。
+本文档详述 Antigravity 2.0 桌面端换肤的底层实现机理、DOM 结构与最新样式避坑指南。
 
 ---
 
@@ -15,33 +15,54 @@ Antigravity 2.0 桌面客户端采用 Electron / Chromium 渲染引擎。其在�
 
 ---
 
-## 二、四大设计规范与核心避坑机制
+## 二、核心工程避坑机制（五大实战沉淀）
 
-### 1. 坚决杜绝“深色黑底大蒙层”
-* **设计考量**：保持壁纸通透光鲜。
-* **避坑**：深色大色块、深紫托底（如 `rgba(16, 11, 22, 0.72)`）或线性渐变会把画面变成黑乎乎的补丁，严重破坏观感。
-* **标准方案**：全景保持原图高光，所有容器使用高透光轻透磨砂毛玻璃（`rgba(18, 14, 26, 0.18)` + `blur(16px)`）。
-
-### 2. 聊天阅读区鼠标 Hover 绝不亮背景色
-* **设计考量**：聊天区域内包含海量微型交互单元（代码块复制按钮、步骤折叠条、展开内容等）。
-* **避坑**：若使用宽泛选择器在 `:hover` 上添加背景色，鼠标划过阅读内容时会产生令人烦躁的色块闪烁。
-* **标准方案**：聊天流内所有元素鼠标悬停完全保持原生透明（`background: transparent !important`）。
-
-### 3. 盒模型零挤压无抖动
-* **设计考量**：杜绝鼠标划过选项时产生像素级形变或文字抖动。
-* **避坑**：在未设置边框的元素上直接加 `border: 1px solid` 会增加 2px 物理尺寸，挤压相邻内容。
-* **标准方案**：常态预设 1px 盒模型与 `box-sizing: border-box`，Hover 态使用 `inset box-shadow`，几何尺寸 100% 保持恒定。
-
-### 4. 选项卡片 Tailwind CSS 属性选择器泛匹配避坑（重点！）
-* **React 底层结构**：
-  * Antigravity 的选项组件在未选中时分配 `className="... border hover:bg-secondary !border-transparent"`。
-  * 在选中时分配 `className="... border bg-secondary border-border"`。
-* **致命陷阱**：
-  * 若使用 `label[class*="bg-secondary"]` 属性子串匹配，由于未选中态包含 `hover:bg-secondary`，会**全量误伤所有未选中项**，导致未选中项也显示为粉色发光，彻底丧失选中对比度。
+### 1. 吸顶消息防重叠机制 (Sticky Anti-Collision)
+* **DOM 特性**：用户发出的提问气泡祖先容器被配置了 `sticky top-0 z-10`。当用户在工作区向下翻阅历史长文时，提问气泡会悬浮吸附在顶部，正文从其背后穿过。
+* **致命陷阱**：若气泡为纯透明（或被全局透明规则误伤），底层穿过的正文会直接透过气泡，与气泡内的提问字产生严重的文字重叠错乱。
 * **标准方案**：
-  * 严禁使用 `[class*="bg-secondary"]`。
-  * 严格使用独立类名选择器 `.bg-secondary` 与输入框勾选状态伪类 `:has(input:checked)`、`:has(input[type="radio"]:checked)`、`:has(input[type="checkbox"]:checked)`。
-  * 采用 `box-shadow: inset 0 0 0 1px ...` 机制，彻底免疫 Tailwind `.\!border-transparent` 对边框颜色的强制覆盖。
+  * 精准为提问实体卡片（`div[data-testid="user-input-step"] div[class*="bg-card"]`）赋予 `rgba(22, 16, 28, 0.50)` + `blur(20px)` 的单层柔焦毛玻璃。
+  * 吸顶时能够完全将底层字迹柔化为隐约微光，彻底消除透字与重叠。
+
+### 2. 根治多层嵌套变黑 (Single-Layer Glass vs Compound Alpha)
+* **DOM 特性**：输入框、提问气泡等在 Tailwind 架构下通常采用外层 `bg-card-border` 套内层 `bg-card` 的两层嵌套。
+* **致命陷阱**：若外层与内层同时被赋予半透明毛玻璃，多层透明度与 blur 叠合，会导致局部变成深黑死块。
+* **标准方案**：
+  * 将 `--color-card` 设为 `transparent !important`。
+  * 外层容器透明，仅保留细微高光切边（`inset 0 1px 0 rgba(255, 255, 255, 0.16)`），内层卡片统一应用单层微光（`0.28` 磨砂），杜绝叠加。
+
+### 3. 解除原生长文本 10vh 截断与渐变遮罩 (Unmask & Uncap)
+* **DOM 特性**：Antigravity 原生当消息包含图片或多行长文本时，默认添加了 `max-h-[10vh] overflow-hidden` 与 `mask-image: linear-gradient(black 85%, transparent 100%)`。
+* **致命陷阱**：用户发出的消息超过视口高度 10% 时，下半截被硬性切断，并蒙上一层灰黑雾气遮罩。
+* **标准方案**：
+  * 强制将气泡内部的 `div[class*="max-h-"]` 设为 `max-height: none !important; overflow: visible !important;`。
+  * 全局清除聊天流内部所有 `mask-image: none !important;`。
+
+### 4. 主滚动容器安全留白与抗闪烁抖动 (Anti-Jitter Safe Zone)
+* **DOM 特性**：主聊天流滚动容器（`div.isolate.overflow-y-auto.md-table-bleed`）自带原生贴底自动滚动计算逻辑（Auto-scroll anchoring）。
+* **致命陷阱**：
+  * 若直接在滚动视口容器上加 `padding-bottom`，会在元素高频渲染时引起 `scrollHeight` 与 `clientHeight` 震荡，导致生成时上下剧烈闪烁。
+  * 若强行将思考折叠流改为 `overflow: visible`，会破坏虚拟滚动高度约束。
+* **标准方案**：
+  * 滚动视口自身保持 `padding-bottom: 0px !important;`。
+  * 仅在内层内容容器（`div[class*="md-table-bleed"] > div[class*="mx-auto"]`）注入 `padding-bottom: 80px !important;`。
+  * 视口顶部配置 `scroll-padding-top: 16px !important;`。
+
+### 5. 新消息发送防顶出上边界 (Anti-Overflow on Submit)
+* **DOM 特性**：新消息发送瞬间，轮次容器内尚未生成助手回复，其直接父级高度仅等于用户气泡自身高度。
+* **致命陷阱**：
+  * 外层 `flex items-start` 导致轮次子容器无法自动拉伸，当自动贴底滚动触发时，未拉伸的父级底部直接拖拽吸顶气泡（`position: sticky` 不能超出包含块边界），导致消息被硬生生顶出滚动视口上边界，顶部边框、圆角与图片缩略图被直接截断切掉。
+* **标准方案**：
+  * 设置 `div.flex.items-start { align-items: stretch !important; }`。
+  * 为轮次容器注入最小高度兜底：`div[class*="group"][class*="scroll-mt-"] { min-height: calc(100cqh - 100px) !important; flex: 1 1 auto !important; }`。
+  * 为吸顶气泡设置 10px 优雅下沉呼吸留白：`div[class*="sticky"] { top: 10px !important; }`，彻底杜绝紧贴或穿越顶栏。
+
+### 6. 选项卡片 Tailwind 类名避坑与防抖动悬停
+* **React 底层结构**：未选中态包含 `hover:bg-secondary`，选中态包含 `bg-secondary`。
+* **致命陷阱**：若使用 `label[class*="bg-secondary"]` 属性选择器，会全量误伤未选中项。
+* **标准方案**：
+  * 严格使用类选择器 `.bg-secondary` 与 `:has(input:checked)` 伪类。
+  * 常态设置 1px 细边框，悬停使用 `inset box-shadow`，几何尺寸恒定零抖动。
 
 ---
 
@@ -50,12 +71,11 @@ Antigravity 2.0 桌面客户端采用 Electron / Chromium 渲染引擎。其在�
 | 目标元素 | CSS 选择器 | 关键属性 |
 | :--- | :--- | :--- |
 | **全屏壁纸** | `#antigravity-dream-skin-bg` | `position: fixed; z-index: -99999; pointer-events: none;` |
-| **侧边栏** | `div.bg-sidebar.h-full, aside` | `backdrop-filter: blur(16px); background: rgba(18, 14, 26, 0.18);` |
+| **侧边栏** | `div.bg-sidebar.h-full, aside` | `backdrop-filter: blur(16px); background: rgba(18, 14, 24, 0.40);` |
 | **聊天流居中** | `div[class*="mx-auto w-full"]` | `max-width: 896px !important; margin: 0 auto !important;` |
-| **底部输入框** | `#antigravity.agentSidePanelInputBox` | `border-radius: 16px; background: rgba(18, 14, 26, 0.18);` |
-| **提问气泡** | `div[class*="group/user-input-step"]` | `border-radius: 12px; background: rgba(18, 14, 26, 0.18);` |
-| **未选中选项** | `label[for*="ask-opt-"], [role="radiogroup"] label` | `background: rgba(20, 15, 28, 0.60); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);` |
-| **选项 Hover** | `label[for*="ask-opt-"]:not(:has(input:checked)):not(.bg-secondary):hover` | `background: rgba(255, 180, 215, 0.18); box-shadow: inset 0 0 0 1px rgba(255, 190, 215, 0.45);` |
-| **选中选项** | `label[for*="ask-opt-"]:has(input:checked), label[for*="ask-opt-"].bg-secondary` | `background: linear-gradient(90deg, rgba(255, 120, 190, 0.50), ...); box-shadow: 0 0 24px rgba(255, 105, 180, 0.70), inset 4px 0 0 0 #ff2d7d;` |
-| **选中序号徽标** | `label[for*="ask-opt-"]:has(input:checked) div[class*="bg-border"]` | `background: linear-gradient(135deg, #ff5599, #ff1a70); box-shadow: 0 0 12px rgba(255, 26, 112, 0.9);` |
-| **暂停/终止按钮** | `button[aria-label*="Pause"] div` | `background-color: #ef4444 !important;` |
+| **底部输入框** | `#antigravity.agentSidePanelInputBox` | `border-radius: 16px; background: rgba(18, 14, 24, 0.28); backdrop-filter: blur(16px);` |
+| **吸顶提问气泡** | `div[data-testid="user-input-step"] div[class*="bg-card"]` | `background: rgba(22, 16, 28, 0.50); backdrop-filter: blur(20px); border-radius: 14px;` |
+| **斜杠菜单浮层** | `#antigravity.agentSidePanelInputBox div[class*="bottom-full"]` | `background: rgba(22, 16, 28, 0.88); backdrop-filter: blur(28px); border-radius: 16px;` |
+| **滚动安全留白** | `div[class*="overflow-y-auto"][class*="md-table-bleed"]` | `padding-bottom: 120px !important;` |
+| **未选中选项** | `label[for*="ask-opt-"], [role="radiogroup"] label` | `background: rgba(20, 15, 26, 0.40); box-shadow: inset 0 0 0 1px ...;` |
+| **选中选项** | `label[for*="ask-opt-"]:has(input:checked), label[for*="ask-opt-"].bg-secondary` | `background: linear-gradient(90deg, rgba(245, 158, 11, 0.48), ...); box-shadow: 0 0 24px ...;` |

@@ -147,26 +147,29 @@ async function evalInPage(wsUrl, code) {
   });
 }
 
-// Generate CSS for pure light frosted glass theme
+// Generate CSS for pure light frosted glass theme with warm golden tones and aux pane glass
 function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   const fx = focusX * 100;
   const fy = focusY * 100;
   const bgGlass = `rgba(18, 14, 26, ${opacity})`;
-  const hoverGlass = `rgba(255, 180, 215, 0.18)`;
-  const activeGlass = `rgba(255, 180, 215, 0.24)`;
+  // 柔暖香槟金与琥珀微光配色体系（呼应陈一一暖阳微热胶片壁纸）
+  const warmBorder = `rgba(255, 222, 190, 0.22)`;
+  const hoverGlass = `rgba(255, 215, 175, 0.18)`;
+  const activeGlass = `rgba(255, 205, 155, 0.26)`;
+  const amberAccent = `#f59e0b`;
 
   return `
-  /* --- Antigravity Dream Skin: Light Frosted Glass & Zero-Shift Hover --- */
+  /* --- Antigravity Warm Golden Dream Skin: Light Frosted Glass & Aux Pane Glass --- */
   :root, .dark, body {
     --color-background: transparent !important;
     --background: transparent !important;
     --sidebar: rgba(255, 255, 255, 0.05) !important;
     --color-sidebar: rgba(255, 255, 255, 0.05) !important;
     --color-sidebar-secondary: ${hoverGlass} !important;
-    --color-card: ${bgGlass} !important;
-    --card: ${bgGlass} !important;
-    --color-card-border: rgba(255, 180, 215, 0.25) !important;
-    --card-border: rgba(255, 180, 215, 0.25) !important;
+    --color-card: transparent !important;
+    --card: transparent !important;
+    --color-card-border: ${warmBorder} !important;
+    --card-border: ${warmBorder} !important;
     --color-muted: transparent !important;
     --muted: transparent !important;
     --color-secondary: ${hoverGlass} !important;
@@ -190,7 +193,7 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     background-repeat: no-repeat !important;
   }
 
-  /* 2. 全局底色透明化与窗口级滚动条消除 */
+  /* 2. 全局底色透明化：中间主工作区 100% 纯净透亮，无弹出时直现高清壁纸 */
   html, body {
     overflow: hidden !important;
     width: 100vw !important;
@@ -202,21 +205,28 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   }
   #root, #root > div,
   .bg-background, [class*="bg-background"],
-  div[class*="overflow-hidden"], div[class*="h-screen w-screen"],
+  div[class*="overflow-hidden"]:not([class*="bg-card"]):not([class*="bottom-full"]), div[class*="h-screen w-screen"],
   div[class*="flex-1 flex min-h-0"], div[class*="h-full w-full"],
+  .relative.z-0.flex-1.flex.min-h-0.h-full,
+  .relative.z-0.flex-1.flex.min-h-0.h-full > div,
+  [data-testid="conversation-view"],
+  [data-pane-id="pane-1"],
+  div[class*="group/pane"],
   main, [role="main"] {
     background: transparent !important;
     background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
-  /* 3. 左侧边栏：轻透毛玻璃 */
+  /* 3. 左侧边栏：轻透磨砂毛玻璃与暖金色微光 */
   div.bg-sidebar.h-full, aside, nav[aria-label="Sidebar"] {
-    background: ${bgGlass} !important;
-    background-color: ${bgGlass} !important;
+    background: rgba(18, 14, 24, 0.40) !important;
+    background-color: rgba(18, 14, 24, 0.40) !important;
     backdrop-filter: blur(${blur}px) saturate(130%) !important;
     -webkit-backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    border-right: 1px solid rgba(255, 190, 215, 0.2) !important;
-    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.10) !important;
+    border-right: 1px solid rgba(255, 222, 190, 0.18) !important;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.15) !important;
   }
 
   .bg-sidebar div, .bg-sidebar section, .bg-sidebar ul, .bg-sidebar li,
@@ -244,12 +254,48 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     border-radius: 8px !important;
   }
 
-  /* 4. 聊天区居中排版 (896px) 对齐底部输入框 */
+  /* 4. 解除用户提问气泡 10vh 截断，平稳防闪烁滚动 (Anti-Jitter) */
+  /* 仅精准解除用户提问气泡的 10vh 截断，坚决不改动 AI 思考流与工具容器的 max-height 和 overflow */
+  div[class*="group/user-input-step"] div[class*="max-h-"],
+  div[data-testid="user-input-step"] div[class*="max-h-"] {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* 消除渐变遮罩灰雾（仅清除 mask-image，绝不强加 overflow: visible 破坏内部滚动） */
+  div[class*="group/user-input-step"] [style*="mask-image"],
+  div[style*="mask-image: linear-gradient(transparent, black"] {
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+  }
+
+  /* 聊天区居中排版 (896px) 对齐底部输入框 */
   div[class*="mx-auto w-full"],
   div[class*="md-table-bleed"] > div[class*="mx-auto"] {
     max-width: 896px !important;
     margin-left: auto !important;
     margin-right: auto !important;
+  }
+
+  /* 轮次容器自适应拉伸与最小高度兜底，杜绝新消息刚发送时被底部 padding 和父容器提拉顶出上边界 */
+  div.flex.items-start {
+    align-items: stretch !important;
+  }
+  div.flex.items-start > div[class*="group"][class*="scroll-mt-"],
+  div[class*="group"][class*="scroll-mt-"] {
+    min-height: calc(100cqh - 100px) !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+  }
+
+  /* 滚动视口安全设置：顶部保留 16px 贴顶滚动内边距，底部视口禁加 padding-bottom 防抖动拉扯 */
+  div[class*="overflow-y-auto"][class*="md-table-bleed"],
+  div.isolate.overflow-y-auto {
+    padding-bottom: 0px !important;
+    scroll-padding-top: 16px !important;
+  }
+  div[class*="md-table-bleed"] > div[class*="mx-auto"] {
+    padding-bottom: 80px !important;
   }
 
   [class*="after:bg-gradient-to-b"]::after,
@@ -259,88 +305,140 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     opacity: 0 !important;
   }
 
+  /* 吸顶气泡保留 10px 优雅呼吸间距，杜绝紧贴或穿越顶栏面包屑 */
   div[class*="sticky"] {
+    top: 10px !important;
     background: transparent !important;
     background-color: transparent !important;
   }
 
-  /* 5. 用户提问气泡：左侧同款轻透毛玻璃 */
+  /* 5. 用户提问气泡：高级轻透磨砂毛玻璃，吸顶时彻底柔焦底层文字，保障清晰阅读 */
   div[class*="group/user-input-step"] {
     max-width: 896px !important;
     margin-left: auto !important;
     margin-right: auto !important;
+    scroll-margin-top: 24px !important;
   }
+  div[class*="group/user-input-step"] [data-testid="lifted-context-menu-trigger"],
   div[class*="group/user-input-step"] [class*="bg-card-border"] {
     background: transparent !important;
     background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
   div[class*="group/user-input-step"] div[class*="bg-card"],
-  div[class*="group/user-input-step"] [class*="rounded-xl"] {
-    background: ${bgGlass} !important;
-    background-color: ${bgGlass} !important;
-    backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    -webkit-backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    border: 1px solid rgba(255, 190, 215, 0.22) !important;
-    border-radius: 12px !important;
+  div[data-testid="user-input-step"] div[class*="bg-card"] {
+    background: rgba(22, 16, 28, 0.50) !important;
+    background-color: rgba(22, 16, 28, 0.50) !important;
+    backdrop-filter: blur(20px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+    border: 1px solid rgba(255, 222, 190, 0.28) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  }
+  div[class*="group/user-input-step"] div[class*="bg-card"] div {
+    background: transparent !important;
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
   }
   div[class*="group/user-input-step"] * {
     color: #ffffff !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.80) !important;
+  }
+  div[class*="group/user-input-step"] img {
+    border-radius: 8px !important;
+    border: 1px solid rgba(255, 222, 190, 0.25) !important;
   }
 
-  /* 6. Artifact 工件卡片 */
+  /* 6. Artifact 工件卡片：极度轻透磨砂毛玻璃 */
   .artifact-card, div[class*="artifact-card"] {
-    background: ${bgGlass} !important;
-    background-color: ${bgGlass} !important;
+    background: rgba(18, 14, 24, 0.28) !important;
+    background-color: rgba(18, 14, 24, 0.28) !important;
     backdrop-filter: blur(${blur}px) saturate(130%) !important;
     -webkit-backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    border: 1px solid rgba(255, 190, 215, 0.22) !important;
+    border: 1px solid rgba(255, 222, 190, 0.22) !important;
     border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
   }
   .artifact-card *, div[class*="artifact-card"] * {
     color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75) !important;
   }
 
-  /* 7. 底部输入框 */
+  /* 7. 底部输入框：左右两边同款单层极轻透磨砂毛玻璃，微光切边，杜绝死黑硬块 */
   #antigravity\\.agentSidePanelInputBox,
   div[id="antigravity.agentSidePanelInputBox"] {
-    background: ${bgGlass} !important;
-    background-color: ${bgGlass} !important;
+    background: rgba(18, 14, 24, 0.28) !important;
+    background-color: rgba(18, 14, 24, 0.28) !important;
     backdrop-filter: blur(${blur}px) saturate(130%) !important;
     -webkit-backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    border: 1px solid rgba(255, 190, 215, 0.25) !important;
+    border: 1px solid rgba(255, 222, 190, 0.26) !important;
     border-radius: 16px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
   }
-  #antigravity\.agentSidePanelInputBox form,
+  #antigravity\\.agentSidePanelInputBox form,
   div[id="antigravity.agentSidePanelInputBox"] form,
-  #antigravity\.agentSidePanelInputBox div:not(button):not(button *),
-  div[id="antigravity.agentSidePanelInputBox"] div:not(button):not(button *) {
+  #antigravity\\.agentSidePanelInputBox > div,
+  div[id="antigravity.agentSidePanelInputBox"] > div,
+  #antigravity\\.agentSidePanelInputBox div[class*="rounded-[calc"]:not([class*="bottom-full"]),
+  div[id="antigravity.agentSidePanelInputBox"] div[class*="rounded-[calc"]:not([class*="bottom-full"]) {
     background: transparent !important;
     background-color: transparent !important;
     box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
-  #antigravity\.agentSidePanelInputBox textarea,
+
+  /* 7.0 斜杠指令 / 技能与提及浮层菜单：高级深暖紫磨砂毛玻璃，彻底杜绝透明导致文字重叠遮挡 */
+  #antigravity\\.agentSidePanelInputBox div[class*="bottom-full"],
+  div[id="antigravity.agentSidePanelInputBox"] div[class*="bottom-full"],
+  div[class*="bottom-full"][class*="bg-card"],
+  div[class*="bottom-full"][class*="rounded-2xl"] {
+    background: rgba(22, 16, 28, 0.88) !important;
+    background-color: rgba(22, 16, 28, 0.88) !important;
+    backdrop-filter: blur(28px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+    border: 1px solid rgba(255, 222, 190, 0.32) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 222, 190, 0.15) !important;
+  }
+  #antigravity\\.agentSidePanelInputBox div[class*="bottom-full"] div[class*="cursor-pointer"]:hover,
+  div[id="antigravity.agentSidePanelInputBox"] div[class*="bottom-full"] div[class*="cursor-pointer"]:hover,
+  #antigravity\\.agentSidePanelInputBox div[class*="bottom-full"] [data-active="true"] {
+    background: rgba(255, 215, 175, 0.18) !important;
+    background-color: rgba(255, 215, 175, 0.18) !important;
+    border-radius: 8px !important;
+  }
+  #antigravity\\.agentSidePanelInputBox div[class*="bottom-full"] * {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
+  }
+  #antigravity\\.agentSidePanelInputBox textarea,
   div[id="antigravity.agentSidePanelInputBox"] textarea,
-  #antigravity\.agentSidePanelInputBox [contenteditable="true"],
+  #antigravity\\.agentSidePanelInputBox [contenteditable="true"],
   div[id="antigravity.agentSidePanelInputBox"] [contenteditable="true"] {
     background: transparent !important;
     background-color: transparent !important;
     color: #ffffff !important;
   }
-  #antigravity\.agentSidePanelInputBox textarea::placeholder,
+  #antigravity\\.agentSidePanelInputBox textarea::placeholder,
   div[id="antigravity.agentSidePanelInputBox"] textarea::placeholder,
-  #antigravity\.agentSidePanelInputBox [contenteditable="true"]::placeholder {
-    color: rgba(255, 255, 255, 0.70) !important;
+  #antigravity\\.agentSidePanelInputBox [contenteditable="true"]::placeholder {
+    color: rgba(255, 240, 225, 0.75) !important;
   }
-  #antigravity\.agentSidePanelInputBox button:hover {
+  #antigravity\\.agentSidePanelInputBox button:hover {
     background: ${hoverGlass} !important;
     border-radius: 8px !important;
   }
 
   /* 7.1 暂停/停止/取消按钮与红色停止方块 */
-  #antigravity\.agentSidePanelInputBox button[aria-label*="Cancel"],
+  #antigravity\\.agentSidePanelInputBox button[aria-label*="Cancel"],
   div[id="antigravity.agentSidePanelInputBox"] button[aria-label*="Cancel"],
-  #antigravity\.agentSidePanelInputBox button[data-tooltip-id*="cancel"],
+  #antigravity\\.agentSidePanelInputBox button[data-tooltip-id*="cancel"],
   div[id="antigravity.agentSidePanelInputBox"] button[data-tooltip-id*="cancel"] {
     background: rgba(255, 255, 255, 0.18) !important;
     background-color: rgba(255, 255, 255, 0.18) !important;
@@ -349,16 +447,16 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     align-items: center !important;
     justify-content: center !important;
   }
-  #antigravity\.agentSidePanelInputBox button[aria-label*="Cancel"]:hover,
+  #antigravity\\.agentSidePanelInputBox button[aria-label*="Cancel"]:hover,
   div[id="antigravity.agentSidePanelInputBox"] button[aria-label*="Cancel"]:hover,
-  #antigravity\.agentSidePanelInputBox button[data-tooltip-id*="cancel"]:hover,
+  #antigravity\\.agentSidePanelInputBox button[data-tooltip-id*="cancel"]:hover,
   div[id="antigravity.agentSidePanelInputBox"] button[data-tooltip-id*="cancel"]:hover {
-    background: rgba(239, 68, 68, 0.30) !important;
-    background-color: rgba(239, 68, 68, 0.30) !important;
+    background: rgba(239, 68, 68, 0.35) !important;
+    background-color: rgba(239, 68, 68, 0.35) !important;
   }
-  #antigravity\.agentSidePanelInputBox button [class*="bg-red"],
+  #antigravity\\.agentSidePanelInputBox button [class*="bg-red"],
   div[id="antigravity.agentSidePanelInputBox"] button [class*="bg-red"],
-  #antigravity\.agentSidePanelInputBox div.bg-red-500,
+  #antigravity\\.agentSidePanelInputBox div.bg-red-500,
   div[id="antigravity.agentSidePanelInputBox"] div.bg-red-500 {
     background: #ef4444 !important;
     background-color: #ef4444 !important;
@@ -370,23 +468,46 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   }
 
   /* 7.2 发送按钮常态与高亮 */
-  #antigravity\.agentSidePanelInputBox button[aria-label*="Send"],
+  #antigravity\\.agentSidePanelInputBox button[aria-label*="Send"],
   div[id="antigravity.agentSidePanelInputBox"] button[aria-label*="Send"],
-  #antigravity\.agentSidePanelInputBox button[data-tooltip-id*="send"],
+  #antigravity\\.agentSidePanelInputBox button[data-tooltip-id*="send"],
   div[id="antigravity.agentSidePanelInputBox"] button[data-tooltip-id*="send"] {
-    background: rgba(255, 255, 255, 0.20) !important;
-    background-color: rgba(255, 255, 255, 0.20) !important;
+    background: rgba(255, 225, 195, 0.24) !important;
+    background-color: rgba(255, 225, 195, 0.24) !important;
     border-radius: 9999px !important;
   }
 
-  /* 8. 代码块与终端块 */
-  pre, code, [class*="group/run-command"] {
-    background: ${bgGlass} !important;
-    background-color: ${bgGlass} !important;
-    backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    -webkit-backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    border: 1px solid rgba(255, 190, 215, 0.20) !important;
-    border-radius: 10px !important;
+  /* 8. 行内代码与大代码块彻底分流：告别黑色色块与灰雾遮罩，呈现清透高质感 */
+  code:not(pre code),
+  [class*="[&_code:not(pre_code)]"] code,
+  .leading-relaxed code,
+  p code, li code {
+    background: rgba(255, 220, 190, 0.12) !important;
+    background-color: rgba(255, 220, 190, 0.12) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 222, 190, 0.22) !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    padding: 1px 6px !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  /* pre 容器单层优雅微光毛玻璃，内部 pre code 100% 透明，杜绝双层叠加黑块 */
+  pre, [class*="group/run-command"] {
+    background: rgba(18, 14, 24, 0.25) !important;
+    background-color: rgba(18, 14, 24, 0.25) !important;
+    backdrop-filter: blur(12px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(130%) !important;
+    border: 1px solid rgba(255, 222, 190, 0.20) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  }
+  pre code, pre div, pre span {
+    background: transparent !important;
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   /* 9. 聊天区 Hover 纯净化：无背景杂色，无边框厚度挤压 */
@@ -416,17 +537,17 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   button[data-testid="thinking-collapsible-trigger"] *,
   button[data-testid="worked-for-collapsible"] * {
     color: #ffffff !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
   }
 
-  /* 10. 仅针对询问对话（Ask Question / Permission 弹窗）选项的 Hover 效果 */
+  /* 10. 交互问答（Ask Question / Permission 弹窗）选项卡片：左右同款轻透磨砂毛玻璃 */
   div[class*="rounded-2xl"][class*="bg-card-border"],
   div[class*="bg-card"][class*="rounded-"] {
-    background: rgba(18, 14, 26, 0.22) !important;
-    background-color: rgba(18, 14, 26, 0.22) !important;
-    backdrop-filter: blur(20px) saturate(130%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(130%) !important;
-    border: 1px solid rgba(255, 190, 215, 0.30) !important;
+    background: rgba(18, 14, 24, 0.38) !important;
+    background-color: rgba(18, 14, 24, 0.38) !important;
+    backdrop-filter: blur(${blur}px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(${blur}px) saturate(130%) !important;
+    border: 1px solid rgba(255, 222, 190, 0.20) !important;
     border-radius: 16px !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
   }
@@ -435,30 +556,30 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   div[class*="bg-card-border"] h3,
   div[class*="bg-card-border"] [class*="text-foreground"] {
     color: #ffffff !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
   }
 
   div[class*="bg-card-border"] textarea[class*="font-mono"],
   textarea[aria-label="Edit permission target"] {
-    background: ${bgGlass} !important;
-    background-color: ${bgGlass} !important;
-    border: 1px solid rgba(255, 190, 215, 0.22) !important;
+    background: rgba(18, 14, 24, 0.55) !important;
+    background-color: rgba(18, 14, 24, 0.55) !important;
+    border: 1px solid rgba(255, 222, 190, 0.22) !important;
     color: #ffffff !important;
     border-radius: 8px !important;
   }
 
-  /* 选项盒模型常态锁定 1px 柔和边框，杜绝尺寸变动与挤压 */
+  /* 选项盒模型常态锁定 1px 柔和边框，轻透毛玻璃 */
   label[for*="ask-opt-"],
   label:has(input[name*="ask-question"]),
   [role="radiogroup"] label,
   div[class*="bg-card-border"] [role="radiogroup"] label,
   div[class*="bg-card-border"] label {
-    background: rgba(20, 15, 28, 0.60) !important;
-    background-color: rgba(20, 15, 28, 0.60) !important;
+    background: rgba(20, 15, 26, 0.40) !important;
+    background-color: rgba(20, 15, 26, 0.40) !important;
     background-image: none !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 230, 205, 0.18) !important;
     border-radius: 10px !important;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 230, 205, 0.18) !important;
     box-sizing: border-box !important;
     transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
     cursor: pointer !important;
@@ -469,10 +590,10 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   label:has(input[name*="ask-question"]) div[class*="bg-border"],
   [role="radiogroup"] label div[class*="bg-border"],
   div[class*="bg-card-border"] label div[class*="bg-border"] {
-    background: rgba(255, 255, 255, 0.10) !important;
-    background-color: rgba(255, 255, 255, 0.10) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    background-color: rgba(255, 255, 255, 0.12) !important;
     background-image: none !important;
-    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border: 1px solid rgba(255, 225, 195, 0.22) !important;
     box-shadow: none !important;
     border-radius: 6px !important;
     transition: all 0.18s ease !important;
@@ -481,7 +602,7 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   label:has(input[name*="ask-question"]) div[class*="bg-border"] span,
   [role="radiogroup"] label div[class*="bg-border"] span,
   div[class*="bg-card-border"] label div[class*="bg-border"] span {
-    color: rgba(255, 255, 255, 0.65) !important;
+    color: rgba(255, 245, 235, 0.75) !important;
     font-weight: 600 !important;
     text-shadow: none !important;
   }
@@ -489,21 +610,21 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   label:has(input[name*="ask-question"]) span,
   [role="radiogroup"] label span,
   div[class*="bg-card-border"] label span {
-    color: rgba(255, 255, 255, 0.85) !important;
+    color: rgba(255, 255, 255, 0.90) !important;
     font-weight: 400 !important;
     text-shadow: none !important;
   }
 
-  /* 选项 Hover：保持 1px 边框厚度不挤压，柔粉透光高亮 */
+  /* 选项 Hover：柔暖香槟金微光高亮 */
   label[for*="ask-opt-"]:not(:has(input:checked)):not(.bg-secondary):hover,
   label:has(input[name*="ask-question"]):not(:has(input:checked)):not(.bg-secondary):hover,
   [role="radiogroup"] label:not(:has(input:checked)):not(.bg-secondary):hover,
   div[class*="bg-card-border"] [role="radiogroup"] label:not(:has(input:checked)):not(.bg-secondary):hover,
   div[class*="bg-card-border"] label:not(:has(input:checked)):not(.bg-secondary):hover {
-    background: rgba(255, 180, 215, 0.18) !important;
-    background-color: rgba(255, 180, 215, 0.18) !important;
-    border: 1px solid rgba(255, 190, 215, 0.45) !important;
-    box-shadow: inset 0 0 0 1px rgba(255, 190, 215, 0.45), 0 0 14px rgba(255, 180, 215, 0.18) !important;
+    background: ${hoverGlass} !important;
+    background-color: ${hoverGlass} !important;
+    border: 1px solid rgba(255, 222, 190, 0.50) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 222, 190, 0.50), 0 0 14px rgba(255, 200, 140, 0.20) !important;
   }
   label[for*="ask-opt-"]:not(:has(input:checked)):not(.bg-secondary):hover div[class*="bg-border"] span,
   label:has(input[name*="ask-question"]):not(:has(input:checked)):not(.bg-secondary):hover div[class*="bg-border"] span,
@@ -512,7 +633,7 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     color: #ffffff !important;
   }
 
-  /* 选项 选中态 (Selected) 强视觉辨识度与发光光晕（严禁使用 class*="bg-secondary" 泛匹配） */
+  /* 选项 选中态 (Selected)：琥珀暖金微光与清晰发光光晕 */
   label[for*="ask-opt-"]:has(input:checked),
   label[for*="ask-opt-"].bg-secondary,
   label[for*="ask-opt-"][data-state="checked"],
@@ -529,14 +650,14 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   div[class*="bg-card-border"] label.bg-secondary,
   div[class*="bg-card-border"] label[data-state="checked"],
   div[class*="bg-card-border"] label[aria-checked="true"] {
-    background: linear-gradient(90deg, rgba(255, 120, 190, 0.50), rgba(255, 75, 160, 0.32)) !important;
-    background-color: rgba(255, 100, 175, 0.42) !important;
-    border: 1.5px solid rgba(255, 220, 245, 0.95) !important;
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.48), rgba(217, 119, 6, 0.32)) !important;
+    background-color: rgba(230, 140, 30, 0.38) !important;
+    border: 1.5px solid rgba(255, 235, 205, 0.95) !important;
     border-radius: 10px !important;
-    box-shadow: 0 0 24px rgba(255, 105, 180, 0.70), inset 4px 0 0 0 #ff2d7d, inset 0 0 0 1.5px rgba(255, 220, 245, 0.95), inset 0 0 14px rgba(255, 180, 220, 0.40) !important;
+    box-shadow: 0 0 24px rgba(245, 158, 11, 0.65), inset 4px 0 0 0 ${amberAccent}, inset 0 0 0 1.5px rgba(255, 235, 205, 0.95), inset 0 0 14px rgba(255, 215, 160, 0.40) !important;
   }
 
-  /* 选中态内部序号徽标：明艳发光高亮粉，一眼即识 */
+  /* 选中态内部序号徽标：璀璨琥珀暖金 */
   label[for*="ask-opt-"]:has(input:checked) div[class*="bg-border"],
   label[for*="ask-opt-"].bg-secondary div[class*="bg-border"],
   label:has(input[name*="ask-question"]:checked) div[class*="bg-border"],
@@ -549,10 +670,10 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   div[class*="bg-card-border"] label:has(input:checked) div[class*="bg-border"],
   div[class*="bg-card-border"] label.bg-secondary div[class*="bg-border"],
   div[class*="bg-card-border"] label[data-state="checked"] div[class*="bg-border"] {
-    background: linear-gradient(135deg, #ff5599, #ff1a70) !important;
-    background-color: #ff1a70 !important;
+    background: linear-gradient(135deg, #fbbf24, #d97706) !important;
+    background-color: #d97706 !important;
     border: 1.5px solid #ffffff !important;
-    box-shadow: 0 0 12px rgba(255, 26, 112, 0.9), 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.8), 0 2px 6px rgba(0, 0, 0, 0.5) !important;
   }
   label[for*="ask-opt-"]:has(input:checked) div[class*="bg-border"] span,
   label[for*="ask-opt-"].bg-secondary div[class*="bg-border"] span,
@@ -567,10 +688,10 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   div[class*="bg-card-border"] label.bg-secondary div[class*="bg-border"] span {
     color: #ffffff !important;
     font-weight: 800 !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7) !important;
   }
 
-  /* 选中态文字纯白加粗，带柔和光晕与阴影 */
+  /* 选中态文字纯白加粗，带立体阴影 */
   label[for*="ask-opt-"]:has(input:checked) span,
   label[for*="ask-opt-"].bg-secondary span,
   label:has(input[name*="ask-question"]:checked) span,
@@ -595,24 +716,108 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   }
   label[for*="ask-opt-"] textarea::placeholder,
   [role="radiogroup"] label textarea::placeholder {
-    color: rgba(255, 255, 255, 0.6) !important;
+    color: rgba(255, 240, 225, 0.65) !important;
   }
 
-  /* 11. 正文文字自然排版 */
+  /* 11. 正文文字与次级文字排版加固（杜绝日光背景下发虚发飘） */
   .text-foreground, [class*="text-foreground"],
   [class*="leading-relaxed"] p, [class*="leading-relaxed"] li,
   [class*="leading-relaxed"] h1, [class*="leading-relaxed"] h2,
   [class*="leading-relaxed"] h3, [class*="leading-relaxed"] h4 {
     color: #ffffff !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.90), 0 0 1px rgba(0, 0, 0, 0.75) !important;
   }
 
-  /* 12. 弹窗、设置面板、模态框与气泡浮层（轻透高质感毛玻璃） */
+  /* 次级说明文字从暗灰强制提亮为暖白/浅米白 */
+  .text-muted-foreground, [class*="text-muted-foreground"],
+  .text-secondary-foreground, [class*="text-secondary-foreground"],
+  span.text-xs, p.text-xs {
+    color: rgba(255, 242, 232, 0.88) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.80) !important;
+  }
+
+  /* =========================================================================
+     12. 右侧辅助窗口（Auxiliary Pane / 文件查看 / 评审 / 终端 / 工件）
+     与左侧边栏完全一致的轻透磨砂毛玻璃视觉；未弹出时完全透明，绝不污染中间工作区
+     ========================================================================= */
+  .relative.z-0.flex-1.flex.min-h-0.h-full > .relative.flex.w-full.h-full.outline-none > div:has([data-tooltip-id*="aux-tab"]),
+  div[data-pane-id]:not([data-pane-id="pane-1"]) {
+    background: rgba(18, 14, 24, 0.40) !important;
+    background-color: rgba(18, 14, 24, 0.40) !important;
+    backdrop-filter: blur(${blur}px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(${blur}px) saturate(130%) !important;
+    border-left: 1px solid rgba(255, 222, 190, 0.18) !important;
+    box-shadow: -2px 0 16px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* 辅助窗格内部多层容器全部保持透明，杜绝多层叠加导致的黑色死块 */
+  .relative.z-0.flex-1.flex.min-h-0.h-full > .relative.flex.w-full.h-full.outline-none > div:has([data-tooltip-id*="aux-tab"]) div:not([class*="bg-border"]):not(button):not(pre):not(code) {
+    background: transparent !important;
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* 辅助窗格内部顶部 Tab 栏 */
+  .relative.z-0.flex-1.flex.min-h-0.h-full > .relative.flex.w-full.h-full.outline-none > div:has([data-tooltip-id*="aux-tab"]) div.shrink-0 {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 222, 190, 0.15) !important;
+  }
+
+  /* 辅助窗格内部标签按钮 */
+  [data-tooltip-id*="aux-tab"] {
+    color: rgba(255, 245, 235, 0.88) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
+  }
+  [data-tooltip-id*="aux-tab"]:hover,
+  [data-tooltip-id*="aux-tab"][data-active="true"],
+  [data-tooltip-id*="aux-tab"][aria-selected="true"],
+  [data-tooltip-id*="aux-tab"].bg-muted {
+    background: ${hoverGlass} !important;
+    color: #ffffff !important;
+  }
+
+  /* 辅助窗格内部所有文字与正文 */
+  .relative.z-0.flex-1.flex.min-h-0.h-full > .relative.flex.w-full.h-full.outline-none > div:has([data-tooltip-id*="aux-tab"]) p,
+  .relative.z-0.flex-1.flex.min-h-0.h-full > .relative.flex.w-full.h-full.outline-none > div:has([data-tooltip-id*="aux-tab"]) span,
+  .relative.z-0.flex-1.flex.min-h-0.h-full > .relative.flex.w-full.h-full.outline-none > div:has([data-tooltip-id*="aux-tab"]) h1,
+  .relative.z-0.flex-1.flex.min-h-0.h-full > .relative.flex.w-full.h-full.outline-none > div:has([data-tooltip-id*="aux-tab"]) h2,
+  .relative.z-0.flex-1.flex.min-h-0.h-full > .relative.flex.w-full.h-full.outline-none > div:has([data-tooltip-id*="aux-tab"]) h3,
+  .relative.z-0.flex-1.flex.min-h-0.h-full > .relative.flex.w-full.h-full.outline-none > div:has([data-tooltip-id*="aux-tab"]) li {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  /* 辅助窗格内部代码、文件卡片、变更列表：轻透微光，杜绝深黑死块 */
+  .relative.z-0.flex-1.flex.min-h-0.h-full > .relative.flex.w-full.h-full.outline-none > div:has([data-tooltip-id*="aux-tab"]) pre,
+  .relative.z-0.flex-1.flex.min-h-0.h-full > .relative.flex.w-full.h-full.outline-none > div:has([data-tooltip-id*="aux-tab"]) code,
+  .relative.z-0.flex-1.flex.min-h-0.h-full > .relative.flex.w-full.h-full.outline-none > div:has([data-tooltip-id*="aux-tab"]) [class*="rounded"] {
+    background: rgba(255, 220, 190, 0.08) !important;
+    background-color: rgba(255, 220, 190, 0.08) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 222, 190, 0.16) !important;
+  }
+
+  /* 左右窗格拖拽分割线 Handle */
+  div.bg-border.flex-shrink-0.relative.z-30 {
+    background: rgba(255, 222, 190, 0.22) !important;
+    transition: background 0.2s ease, box-shadow 0.2s ease !important;
+  }
+  div.bg-border.flex-shrink-0.relative.z-30:hover {
+    background: rgba(245, 158, 11, 0.80) !important;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.6) !important;
+  }
+
+  /* =========================================================================
+     13. 弹窗、模态框、悬浮卡片 (Hover Card / Tooltip) 与下拉菜单
+     解决左侧栏 Hover 卡片（如“PC与小程序代办同步”）背景发灰字迹不清问题
+     ========================================================================= */
   .settings-modal-backdrop,
   div[class*="backdrop"] {
-    background: rgba(0, 0, 0, 0.18) !important;
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
+    background: rgba(0, 0, 0, 0.25) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
   }
 
   [role="dialog"],
@@ -622,25 +827,25 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   div[class*="modal-container"],
   div[role="dialog"].bg-background,
   div[aria-modal="true"].bg-background {
-    background: rgba(28, 20, 36, 0.40) !important;
-    background-color: rgba(28, 20, 36, 0.40) !important;
-    backdrop-filter: blur(24px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
-    border: 1px solid rgba(255, 190, 215, 0.28) !important;
+    background: rgba(26, 20, 32, 0.70) !important;
+    background-color: rgba(26, 20, 32, 0.70) !important;
+    backdrop-filter: blur(28px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+    border: 1px solid rgba(255, 222, 190, 0.30) !important;
     border-radius: 16px !important;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 190, 215, 0.15) !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 222, 190, 0.15) !important;
   }
 
-  /* 弹窗内部左侧导航与分割线：轻透层级感 */
+  /* 弹窗内部左侧导航与分割线 */
   [role="dialog"] div[class*="bg-sidebar"],
   [role="dialog"] div[class*="border-r"] {
-    background: rgba(14, 10, 20, 0.18) !important;
-    background-color: rgba(14, 10, 20, 0.18) !important;
-    border-color: rgba(255, 190, 215, 0.20) !important;
+    background: rgba(14, 10, 20, 0.28) !important;
+    background-color: rgba(14, 10, 20, 0.28) !important;
+    border-color: rgba(255, 222, 190, 0.20) !important;
   }
 
   [role="dialog"] * {
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7) !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75) !important;
   }
 
   [role="dialog"] button,
@@ -650,30 +855,41 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     color: #ffffff !important;
   }
 
-  /* 下拉菜单、浮层与 Popover */
+  /* 下拉菜单、浮层、Popover、以及 HoverCard / Tooltip */
+  [role="tooltip"],
+  [data-radix-tooltip-content],
+  [data-radix-hover-card-content],
+  [data-radix-popper-content-wrapper] > div,
   [role="menu"],
   [role="listbox"],
-  [data-radix-popper-content-wrapper] > div,
   [data-radix-menu-content],
   [data-radix-select-content],
   div[class*="popover"],
   div[class*="dropdown"] {
-    background: rgba(26, 20, 36, 0.65) !important;
-    background-color: rgba(26, 20, 36, 0.65) !important;
-    backdrop-filter: blur(24px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
-    border: 1px solid rgba(255, 190, 215, 0.25) !important;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4) !important;
+    background: rgba(24, 18, 30, 0.88) !important;
+    background-color: rgba(24, 18, 30, 0.88) !important;
+    backdrop-filter: blur(28px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+    border: 1px solid rgba(255, 222, 190, 0.28) !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45) !important;
+    border-radius: 10px !important;
   }
 
-  /* 13. 细滚动条 */
+  [role="tooltip"] *,
+  [data-radix-tooltip-content] *,
+  [data-radix-hover-card-content] * {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  }
+
+  /* 14. 细滚动条：柔暖琥珀金滑块 */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 150, 185, 0.45);
+    background: rgba(255, 200, 140, 0.45);
     border-radius: 3px;
   }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 150, 185, 0.75); }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 215, 165, 0.75); }
   `;
 }
 
