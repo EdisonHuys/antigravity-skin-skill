@@ -70,14 +70,21 @@ function parseArgs() {
 
 // Auto-detect active Antigravity CDP debugging port
 function detectPort() {
-  const portFile = path.join(process.env.HOME || "/Users/mac", "Library/Application Support/Antigravity/DevToolsActivePort");
-  if (fs.existsSync(portFile)) {
-    try {
-      const content = fs.readFileSync(portFile, "utf8").trim();
-      const lines = content.split("\n");
-      const port = parseInt(lines[0], 10);
-      if (port > 0) return port;
-    } catch (e) {}
+  const candidates = [
+    process.env.APPDATA ? path.join(process.env.APPDATA, "Antigravity", "DevToolsActivePort") : null,
+    path.join(process.env.HOME || "/Users/mac", "Library/Application Support/Antigravity/DevToolsActivePort"),
+    process.env.HOME ? path.join(process.env.HOME, ".config/Antigravity/DevToolsActivePort") : null
+  ].filter(Boolean);
+
+  for (const portFile of candidates) {
+    if (fs.existsSync(portFile)) {
+      try {
+        const content = fs.readFileSync(portFile, "utf8").trim();
+        const lines = content.split("\n");
+        const port = parseInt(lines[0], 10);
+        if (port > 0) return port;
+      } catch (e) {}
+    }
   }
   return 53735; // default fallback
 }
@@ -1050,6 +1057,133 @@ async function main() {
         styleEl.id = "antigravity-dream-skin-style";
         styleEl.textContent = data.css;
         document.head.appendChild(styleEl);
+
+        // 4. Inject Chinese Localization Engine (Antigravity 2.0 中文汉化挂载)
+        if (!window.__antigravity_zh_installed) {
+          window.__antigravity_zh_installed = true;
+          const zhDict = {
+            "New Conversation": "新建会话",
+            "Conversation History": "历史会话",
+            "Conversations": "会话列表",
+            "Automations": "自动化任务",
+            "Scheduled Tasks": "定时与后台任务",
+            "Customizations": "定制与技能",
+            "Projects": "项目工作区",
+            "Settings": "系统设置",
+            "Feedback": "意见反馈",
+            "Documentation": "官方文档",
+            "Help": "帮助中心",
+            "Sign Out": "退出登录",
+            "Account": "用户账户",
+            "Overview": "概览",
+            "Files": "文件变动",
+            "Terminal": "终端控制台",
+            "Plugins": "插件中心",
+            "Background Tasks": "后台任务",
+            "Subagents": "子智能体",
+            "Artifacts": "生成工件",
+            "Changes": "代码更改",
+            "Review": "审查评审",
+            "Load older messages": "加载历史对话记录",
+            "Conversation Log": "完整会话日志",
+            "Export": "导出记录",
+            "Share": "分享会话",
+            "Delete": "删除会话",
+            "Rename": "重命名",
+            "High": "深度思考",
+            "Turbo": "极速响应",
+            "Fast": "快速模式",
+            "Thinking": "思考分析中",
+            "Model Selection": "切换大模型",
+            "Proceed": "继续执行",
+            "Cancel": "取消操作",
+            "Stop": "终止执行",
+            "Run": "立即运行",
+            "Reject": "拒绝更改",
+            "Accept": "接受更改",
+            "Accept All": "全部接受",
+            "Discard": "丢弃更改",
+            "Working": "处理中",
+            "Completed": "已完成",
+            "Failed": "失败",
+            "Running": "正在运行",
+            "Paused": "已暂停",
+            "Finished": "执行完毕",
+            "General": "通用偏好",
+            "Appearance": "界面外观",
+            "Theme": "主题颜色",
+            "Dark": "深色暗夜",
+            "Light": "浅色明亮",
+            "System": "跟随系统",
+            "Model": "模型架构",
+            "Permissions": "安全与权限",
+            "Strict Mode": "严格安全模式",
+            "Terminal Sandbox": "终端沙盒隔离",
+            "Browser Tools": "浏览器自动化工具",
+            "Auto-Continue": "长回复自动继续",
+            "Sounds": "提示音效",
+            "Keyboard Shortcuts": "快捷键配置",
+            "About": "关于软件",
+            "Version": "客户端版本",
+            "Check for Updates": "检查新版本"
+          };
+          const zhPlaceholders = {
+            "Ask anything, @ to mention, / for actions": "随时提问，输入 @ 引用上下文，/ 调用快捷指令",
+            "Search conversations...": "搜索历史会话...",
+            "Search...": "搜索...",
+            "Type a message...": "输入消息...",
+            "Filter...": "筛选..."
+          };
+
+          function translateNode(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+              const val = node.nodeValue;
+              if (!val) return;
+              const trimmed = val.trim();
+              if (zhDict[trimmed]) {
+                node.nodeValue = val.replace(trimmed, zhDict[trimmed]);
+              } else if (trimmed.startsWith("Worked for ")) {
+                node.nodeValue = val.replace("Worked for ", "用时 ").replace("s", "秒").replace("m", "分");
+              } else if (trimmed.startsWith("Thought for ")) {
+                node.nodeValue = val.replace("Thought for ", "思考 ").replace("s", "秒").replace("m", "分");
+              }
+              return;
+            }
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              if (node.placeholder && zhPlaceholders[node.placeholder]) {
+                node.placeholder = zhPlaceholders[node.placeholder];
+              }
+              const phAttr = node.getAttribute && node.getAttribute("data-placeholder");
+              if (phAttr && zhPlaceholders[phAttr]) {
+                node.setAttribute("data-placeholder", zhPlaceholders[phAttr]);
+              }
+              if (node.title && zhDict[node.title.trim()]) {
+                node.title = zhDict[node.title.trim()];
+              }
+              const aria = node.getAttribute && node.getAttribute("aria-label");
+              if (aria && zhDict[aria.trim()]) {
+                node.setAttribute("aria-label", zhDict[aria.trim()]);
+              }
+              const tag = node.tagName?.toLowerCase();
+              if (tag === 'script' || tag === 'style' || tag === 'textarea' || tag === 'code' || tag === 'pre') return;
+              for (let child = node.firstChild; child; child = child.nextSibling) {
+                translateNode(child);
+              }
+            }
+          }
+
+          translateNode(document.body);
+          const obs = new MutationObserver((mutations) => {
+            for (const m of mutations) {
+              if (m.type === 'childList') {
+                m.addedNodes.forEach(node => translateNode(node));
+              } else if (m.type === 'characterData') {
+                translateNode(m.target);
+              }
+            }
+          });
+          obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+        }
 
         return {
           success: true,

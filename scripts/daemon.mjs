@@ -30,14 +30,21 @@ if (!WebSocket) {
 }
 
 function detectPort() {
-  const portFile = path.join(process.env.HOME || "/Users/mac", "Library/Application Support/Antigravity/DevToolsActivePort");
-  if (fs.existsSync(portFile)) {
-    try {
-      const content = fs.readFileSync(portFile, "utf8").trim();
-      const lines = content.split("\n");
-      const port = parseInt(lines[0], 10);
-      if (port > 0) return port;
-    } catch (e) {}
+  const candidates = [
+    process.env.APPDATA ? path.join(process.env.APPDATA, "Antigravity", "DevToolsActivePort") : null,
+    path.join(process.env.HOME || "/Users/mac", "Library/Application Support/Antigravity/DevToolsActivePort"),
+    process.env.HOME ? path.join(process.env.HOME, ".config/Antigravity/DevToolsActivePort") : null
+  ].filter(Boolean);
+
+  for (const portFile of candidates) {
+    if (fs.existsSync(portFile)) {
+      try {
+        const content = fs.readFileSync(portFile, "utf8").trim();
+        const lines = content.split("\n");
+        const port = parseInt(lines[0], 10);
+        if (port > 0) return port;
+      } catch (e) {}
+    }
   }
   return null;
 }
@@ -201,7 +208,13 @@ function runApplySkin(themeConfig) {
     if (themeConfig.opacity != null) args.push("--opacity", String(themeConfig.opacity));
 
     console.log(`[Daemon ${new Date().toLocaleTimeString()}] 🚀 自动唤醒并注入主题: ${themeConfig.theme || themeConfig.name || "pink-hanfu"}`);
-    const proc = spawn(process.execPath, args, { stdio: "inherit" });
+    const proc = spawn(process.execPath, args, { stdio: ["ignore", "pipe", "pipe"] });
+    proc.stdout?.on("data", (d) => {
+      try { process.stdout?.write(d); } catch (e) {}
+    });
+    proc.stderr?.on("data", (d) => {
+      try { process.stderr?.write(d); } catch (e) {}
+    });
     proc.on("close", resolve);
     proc.on("error", (err) => {
       console.error("[Daemon] 注入进程异常:", err);
@@ -209,6 +222,13 @@ function runApplySkin(themeConfig) {
     });
   });
 }
+
+process.on("uncaughtException", (err) => {
+  try { console.error("[Daemon UncaughtException]:", err); } catch (e) {}
+});
+process.on("unhandledRejection", (err) => {
+  try { console.error("[Daemon UnhandledRejection]:", err); } catch (e) {}
+});
 
 let isInjecting = false;
 

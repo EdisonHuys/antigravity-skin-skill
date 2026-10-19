@@ -26,7 +26,11 @@
 
 | 主题 ID | 主题名称 | 风格特色 | 标语 |
 | :--- | :--- | :--- | :--- |
-| `lin-yiyi` | **陈一一 · 阳光微热** | 树影斑驳午后唯美真人胶片人像壁纸，香槟金微光切边体系 | 树影斑驳的午后，微热里的心动。 |
+| `lin-yiyi-golden-fox` | **陈一一 · 暖阳灵狐 (金光手势)** | 暖阳逆光灵狐掐诀 4K 超清壁纸，黄金比例右侧排布，发丝金边轮廓光 | 金光微醺，灵狐掐诀处的动人甜笑。 |
+| `lin-yiyi-rooftop` | **陈一一 · 天际暮云 (城市天台)** | 高层天台俯瞰壮丽天际线，暮色紫云与微风拂发，黄金分割电影景深 | 天台暮色微风，俯瞰天际线的回眸。 |
+| `lin-yiyi-moonlit` | **陈一一 · 绯夜皎月 (九尾灵狐)** | 皎洁圆月露台夜景，若隐若现暗金九尾灵狐光雾，神秘浪漫东方美学 | 静谧皎月微光，暗金灵狐尾羽流转。 |
+| `lin-yiyi-night` | **陈一一 · 微醺黑裙 (室内夜景)** | 室内私密微醺夜景 4K 超清横屏壁纸，暖灯与夜窗倒影胶片质感 | 微醺夜色，回眸间的温柔。 |
+| `lin-yiyi` | **陈一一 · 阳光微热 (原版)** | 树影斑驳午后唯美真人胶片人像壁纸，香槟金微光切边体系 | 树影斑驳的午后，微热里的心动。 |
 | `pink-hanfu` | **粉蝶华裳** | 16:9 全景国风超清宽屏壁纸，人像黄金右侧排布 | 浮生若梦，落樱成妆。 |
 | `arina-hashimoto` | **桥本有菜** | 温婉治愈日系实景壁纸，柔粉玫瑰光影 | 把柔光与玫瑰带进今天的工作台。 |
 
@@ -55,10 +59,18 @@ node scripts/list_themes.mjs
 # 一键还原官方原生外观
 node scripts/restore_skin.mjs
 
-# 安装开机与重启常驻自动注入服务 (macOS LaunchAgent)
+# 安装开机与重启常驻自动注入服务:
+# Windows (PowerShell):
+powershell -ExecutionPolicy Bypass -File .\scripts\install_daemon.ps1
+
+# macOS:
 ./scripts/install_daemon.sh
 
-# 如需卸载常驻守护服务
+# 如需卸载常驻守护服务:
+# Windows (PowerShell):
+powershell -ExecutionPolicy Bypass -File .\scripts\uninstall_daemon.ps1
+
+# macOS:
 ./scripts/uninstall_daemon.sh
 ```
 

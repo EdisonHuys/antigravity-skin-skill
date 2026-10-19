@@ -28,14 +28,21 @@ if (!WebSocket) {
 }
 
 function detectPort() {
-  const portFile = path.join(process.env.HOME || "/Users/mac", "Library/Application Support/Antigravity/DevToolsActivePort");
-  if (fs.existsSync(portFile)) {
-    try {
-      const content = fs.readFileSync(portFile, "utf8").trim();
-      const lines = content.split("\n");
-      const port = parseInt(lines[0], 10);
-      if (port > 0) return port;
-    } catch (e) {}
+  const candidates = [
+    process.env.APPDATA ? path.join(process.env.APPDATA, "Antigravity", "DevToolsActivePort") : null,
+    path.join(process.env.HOME || "/Users/mac", "Library/Application Support/Antigravity/DevToolsActivePort"),
+    process.env.HOME ? path.join(process.env.HOME, ".config/Antigravity/DevToolsActivePort") : null
+  ].filter(Boolean);
+
+  for (const portFile of candidates) {
+    if (fs.existsSync(portFile)) {
+      try {
+        const content = fs.readFileSync(portFile, "utf8").trim();
+        const lines = content.split("\n");
+        const port = parseInt(lines[0], 10);
+        if (port > 0) return port;
+      } catch (e) {}
+    }
   }
   return 53735;
 }
