@@ -45,19 +45,17 @@ description: >-
 
 ### 第四步：执行核心工程避坑原则
 所有主题开发必须遵守以下 5 大硬核工程铁律，杜绝视觉残缺：
-1. **吸顶消息防重叠（Sticky Message Anti-Collision）**：
-   * 用户发出的消息卡片具有 `sticky top-0 z-10` 吸顶特性。当页面滚动时，下方的长文本会从其背后滑过。
-   * 必须为用户消息赋予 `rgba(22, 16, 28, 0.50)` + `blur(20px)` 实体毛玻璃与柔和高光切边，彻底雾化底层文字，绝对禁止裸透明。
+1. **独立悬浮毛玻璃胶囊吸顶（Floating Glass Capsule Sticky Header）**：
+   * 用户发出的提问卡片采用 `position: sticky; top: 4px` 独立悬浮吸顶，外层全宽通栏（`md-sticky-message-bleed`）保持 100% 透明，彻底消除全宽深色切线对壁纸的切割。
+   * 提问卡片与下方智能体回复保持充裕的 `24px` 呼吸间距，杜绝文字下压截断与上穿漏字。
 2. **根治多层嵌套变黑（Single-Layer Glass vs Compound Alpha）**：
    * 输入框、提问气泡等组件在 Tailwind 下常常是外层 `bg-card-border` 套内层 `bg-card`。
    * 必须只保留一层有效磨砂，内层所有多余背景强制清零（`transparent`），防止双重透明度叠加变黑。
 3. **解除原生长文本 10vh 截断与渐变灰雾（Unmask & Uncap）**：
    * 强制解除客户端自带的 `max-h-[10vh]` 截断与 `mask-image: linear-gradient`，防止用户长提问或带图消息下半截被吞。
 4. **主滚动容器安全留白与抗闪烁（Anti-Jitter Safe Zone）**：
-   * 视口自身保持 `padding-bottom: 0px !important`，仅在内层内容容器设置 `padding-bottom: 80px !important`，杜绝自动贴底滚动与双重 padding 产生的振荡闪烁。
-5. **对话流自然时序线性排列（Natural Linear Chat Flow）**：
-   * 必须将用户提问气泡恢复为标准静态流（`position: static !important`），杜绝原生 Sticky 滞留与轮次父级高度导致的 AI 回复文字被推移到提问上方等颠倒错乱。
-6. **快捷指令菜单高斯聚焦（Slash Popup Blur Isolation）**：
+   * 视口自身保持 `padding-bottom: 0px !important`，在内容容器保持舒缓内边距，杜绝自动贴底滚动与双重 padding 产生的振荡闪烁。
+5. **快捷指令菜单高斯聚焦（Slash Popup Blur Isolation）**：
    * 输入框触发的 `/` 斜杠命令与技能菜单（`bottom-full`）必须配置深色高聚焦磨砂（`blur(28px)`），防止无底色与工作区文字“叠罗汉”。
 
 ### 第五步：CDP 热注入与多窗口实机验证

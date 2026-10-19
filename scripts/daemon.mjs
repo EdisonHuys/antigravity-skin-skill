@@ -63,7 +63,7 @@ async function getTargets(port) {
   });
 }
 
-async function checkSkinInPage(wsUrl) {
+async function checkStateInPage(wsUrl) {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(wsUrl);
     let id = 1;
@@ -77,7 +77,7 @@ async function checkSkinInPage(wsUrl) {
         id: id++,
         method: "Runtime.evaluate",
         params: {
-          expression: 'Boolean(document.getElementById("antigravity-dream-skin-style"))',
+          expression: '({ hasSkin: Boolean(document.getElementById("antigravity-dream-skin-style")), hasZh: Boolean(document.getElementById("antigravity-zh-localization-marker")) })',
           returnByValue: true
         }
       }));
@@ -90,16 +90,81 @@ async function checkSkinInPage(wsUrl) {
         const msg = JSON.parse(data.toString());
         if (msg.id === 1) {
           try { ws.close(); } catch (e) {}
-          resolve(Boolean(msg.result?.result?.value));
+          resolve(msg.result?.result?.value || { hasSkin: false, hasZh: false });
         }
       } catch (e) {
-        resolve(false);
+        resolve({ hasSkin: false, hasZh: false });
       }
     };
 
     const onError = (err) => {
       clearTimeout(timer);
       reject(err);
+    };
+
+    if (typeof ws.on === 'function') {
+      ws.on("open", onOpen);
+      ws.on("message", onMessage);
+      ws.on("error", onError);
+    } else if (typeof ws.addEventListener === 'function') {
+      ws.addEventListener("open", onOpen);
+      ws.addEventListener("message", onMessage);
+      ws.addEventListener("error", onError);
+    } else {
+      ws.onopen = onOpen;
+      ws.onmessage = onMessage;
+      ws.onerror = onError;
+    }
+  });
+}
+
+let cachedZhScript = null;
+function getZhScript() {
+  if (cachedZhScript) return cachedZhScript;
+  const zhScriptPath = path.join(__dirname, "zh_translator.js");
+  if (fs.existsSync(zhScriptPath)) {
+    try {
+      cachedZhScript = fs.readFileSync(zhScriptPath, "utf8");
+    } catch (e) {}
+  }
+  return cachedZhScript;
+}
+
+async function injectZhInPage(wsUrl) {
+  const zhCode = getZhScript();
+  if (!zhCode) return;
+
+  return new Promise((resolve) => {
+    const ws = new WebSocket(wsUrl);
+    let id = 1;
+    let timer = setTimeout(() => {
+      try { ws.close(); } catch (e) {}
+      resolve();
+    }, 3000);
+
+    const onOpen = () => {
+      ws.send(JSON.stringify({
+        id: id++,
+        method: "Runtime.evaluate",
+        params: {
+          expression: zhCode,
+          userGesture: true,
+          awaitPromise: true
+        }
+      }));
+    };
+
+    const onMessage = () => {
+      clearTimeout(timer);
+      try { ws.close(); } catch (e) {}
+      console.log(`[Daemon ${new Date().toLocaleTimeString()}] 🌐 自动为活动窗口热注入中文汉化引擎！`);
+      resolve();
+    };
+
+    const onError = () => {
+      clearTimeout(timer);
+      try { ws.close(); } catch (e) {}
+      resolve();
     };
 
     if (typeof ws.on === 'function') {
@@ -170,8 +235,11 @@ async function checkAndApply() {
 
     for (const page of pages) {
       try {
-        const hasSkin = await checkSkinInPage(page.webSocketDebuggerUrl);
-        if (!hasSkin) {
+        const state = await checkStateInPage(page.webSocketDebuggerUrl);
+        if (!state.hasZh) {
+          await injectZhInPage(page.webSocketDebuggerUrl);
+        }
+        if (!state.hasSkin) {
           isInjecting = true;
           await runApplySkin(themeConfig);
           await new Promise(r => setTimeout(r, 1000));

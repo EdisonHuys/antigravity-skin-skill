@@ -288,14 +288,15 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     width: 100% !important;
   }
 
-  /* 滚动视口安全设置：顶部保留 16px 贴顶滚动内边距，底部视口禁加 padding-bottom 防抖动拉扯 */
+  /* 滚动视口安全设置：保持视口顶部与底部自如滚动 */
   div[class*="overflow-y-auto"][class*="md-table-bleed"],
   div.isolate.overflow-y-auto {
+    scroll-padding-top: 52px !important;
     padding-bottom: 0px !important;
-    scroll-padding-top: 16px !important;
   }
   div[class*="md-table-bleed"] > div[class*="mx-auto"] {
-    padding-bottom: 80px !important;
+    padding-top: 8px !important;
+    padding-bottom: 40px !important;
   }
 
   [class*="after:bg-gradient-to-b"]::after,
@@ -305,23 +306,53 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     opacity: 0 !important;
   }
 
-  /* 用户提问气泡恢复标准线性流 (Static / Normal Flow)：
-     彻底杜绝 Sticky 滞留导致 AI 回复文字被滚动到提问上方或重叠穿透 */
+  /* 4.1 用户提问气泡原生独立悬浮吸顶 (Floating Glass Capsule)：
+     - 恢复原生 position: sticky 吸顶效果，长内容向下滚动时提问卡片优雅悬浮吸附于视口顶端；
+     - 彻底消除横跨全屏的死硬通栏横条（md-sticky-message-bleed 100% 透明），全景壁纸通透无遮切；
+     - 提问气泡与紧随其后的回复内容保持充裕的 24px 呼吸间距，杜绝任何压字截断现象；
+     - 提问卡片呈现精致圆角毛玻璃药丸质感，微光切边，纯白立体字。 */
   div.sticky.top-0,
   div[role="article"][aria-label="用户消息"],
+  div[role="article"][aria-label="User message"],
   div[class*="sticky"][class*="top-"] {
-    position: static !important;
-    top: auto !important;
+    position: sticky !important;
+    top: 4px !important;
+    z-index: 25 !important;
     background: transparent !important;
     background-color: transparent !important;
+    margin-bottom: 24px !important;
   }
 
-  /* 5. 用户提问气泡：高级轻透磨砂毛玻璃，吸顶时彻底柔焦底层文字，保障清晰阅读 */
+  /* 彻底消除通栏切条：恢复 100% 纯净通透，杜绝全宽色块切线与底部下压投影 */
+  div[class*="md-sticky-message-bleed"] {
+    background: transparent !important;
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  /* 提问外层消除冗余顶部内边距，确保卡片紧凑贴顶 */
   div[class*="group/user-input-step"] {
     max-width: 896px !important;
     margin-left: auto !important;
     margin-right: auto !important;
-    scroll-margin-top: 24px !important;
+    padding-top: 0px !important;
+    margin-top: 0px !important;
+    scroll-margin-top: 64px !important;
+    margin-bottom: 4px !important;
+  }
+
+  /* 智能体回复容器保持充裕间距，杜绝任何字迹遮挡 */
+  div[role="article"][aria-label="智能体 response"],
+  div[role="article"][aria-label*="response"] {
+    position: relative !important;
+    z-index: 1 !important;
+    margin-top: 6px !important;
   }
   div[class*="group/user-input-step"] [data-testid="lifted-context-menu-trigger"],
   div[class*="group/user-input-step"] [class*="bg-card-border"] {
@@ -995,9 +1026,15 @@ async function main() {
           if (el.getAttribute("style")) el.removeAttribute("style");
         });
 
-        // 1. Remove old skin
+        // 1. Remove old skin & test styles
         const oldStyle = document.getElementById("antigravity-dream-skin-style");
         if (oldStyle) oldStyle.remove();
+        const testStyle = document.getElementById("test-fix-style");
+        if (testStyle) testStyle.remove();
+        const testShield = document.getElementById("test-sticky-shield");
+        if (testShield) testShield.remove();
+        const cleanSticky = document.getElementById("clean-sticky-style");
+        if (cleanSticky) cleanSticky.remove();
         const oldBg = document.getElementById("antigravity-dream-skin-bg");
         if (oldBg) oldBg.remove();
         const oldWm = document.getElementById("dream-skin-watermark");
