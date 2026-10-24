@@ -261,12 +261,36 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     border-radius: 8px !important;
   }
 
-  /* 4. 解除用户提问气泡 10vh 截断，平稳防闪烁滚动 (Anti-Jitter) */
-  /* 仅精准解除用户提问气泡的 10vh 截断，坚决不改动 AI 思考流与工具容器的 max-height 和 overflow */
+  /* 4. 用户提问气泡长文本：限制最高高度并支持专属微光细滚动条 */
   div[class*="group/user-input-step"] div[class*="max-h-"],
   div[data-testid="user-input-step"] div[class*="max-h-"] {
-    max-height: none !important;
-    overflow: visible !important;
+    max-height: 260px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 6px !important;
+    overscroll-behavior: contain !important;
+    scrollbar-gutter: stable !important;
+  }
+
+  /* 提问卡片内专属微光细滚动条 */
+  div[class*="group/user-input-step"] div[class*="max-h-"]::-webkit-scrollbar,
+  div[data-testid="user-input-step"] div[class*="max-h-"]::-webkit-scrollbar {
+    width: 6px !important;
+    display: block !important;
+  }
+  div[class*="group/user-input-step"] div[class*="max-h-"]::-webkit-scrollbar-track,
+  div[data-testid="user-input-step"] div[class*="max-h-"]::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-radius: 3px !important;
+  }
+  div[class*="group/user-input-step"] div[class*="max-h-"]::-webkit-scrollbar-thumb,
+  div[data-testid="user-input-step"] div[class*="max-h-"]::-webkit-scrollbar-thumb {
+    background: rgba(255, 205, 155, 0.50) !important;
+    border-radius: 3px !important;
+  }
+  div[class*="group/user-input-step"] div[class*="max-h-"]::-webkit-scrollbar-thumb:hover,
+  div[data-testid="user-input-step"] div[class*="max-h-"]::-webkit-scrollbar-thumb:hover {
+    background: rgba(245, 158, 11, 0.85) !important;
   }
 
   /* 消除渐变遮罩灰雾（仅清除 mask-image，绝不强加 overflow: visible 破坏内部滚动） */
