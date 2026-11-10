@@ -2,6 +2,79 @@
 // Antigravity 2.0 Chinese Localization Engine Enhanced
 (function() {
   const dictionary = {
+    // --- Antigravity 2.0 系统设置与新版界面全量汉化增强 ---
+    "Interface Layout": "界面布局模式",
+    "Knowledge Work": "知识工作模式",
+    "Simplified interface for research, writing, and everyday tasks.": "适用于资料调研、文字写作与日常事务的轻量简约界面。",
+    "Software Engineering": "软件工程模式",
+    "Full interface for coding, developer tools, and managing agents.": "包含代码编写、开发者工具链与智能体协同管理的完整专业界面。",
+    "Enable Sounds for Agent": "启用智能体提示音",
+    "Play a sound when your action is needed or the agent finishes.": "当需要您确认操作或智能体完成任务时播放提示音。",
+    "Volume": "提示声音量",
+    "Set the volume of agent sounds.": "设置智能体提示音的音量大小。",
+    "Sound": "声音提示",
+    "Built-in Browser": "内置浏览器",
+    "Open Links In": "网页链接打开方式",
+    "打开 Links In": "网页链接打开方式",
+    "Choose where links open by default when clicked.": "设置在对话中点击网页链接时的默认打开方式。",
+    "External Browser": "外部默认浏览器",
+    "Download Location": "下载存储位置",
+    "Folder where files downloaded in the built-in browser are saved.": "内置浏览器中下载文件时默认保存的本地文件夹。",
+    "Browsing History": "浏览历史记录",
+    "Clear visited URLs and autocomplete suggestions from the built-in browser.": "清理内置浏览器中访问过的网址记录与输入建议。",
+    "Enable Notifications for Agent": "启用智能体桌面通知",
+    "Show system notifications when your action is needed or the agent finishes.": "当需要您确认操作或智能体完成任务时，显示系统桌面通知。",
+    "Browser Subagent": "浏览器子智能体",
+    "Browser 子智能体": "浏览器子智能体",
+    "Configure built-in browser, link opening, and browser subagent preferences.": "配置内置浏览器、外部链接打开策略以及浏览器子智能体偏好。",
+    "Configure allowed and denied URLs for the browser subagent (invoked with /browser). Requires": "配置浏览器子智能体（通过 /browser 唤起）允许和禁止访问的网址规则。需要",
+    "Remote Agents Data": "远程智能体数据",
+    "远程智能体 Data": "远程智能体数据",
+    "Delete All Remote Agents Data": "清除所有远程智能体数据",
+    "Permanently delete your remote conversations, projects, scheduled tasks, connected plugins and settings. Data in the desktop app and your Google account are not affected.": "永久删除您的远程会话、项目、定时任务、已连接插件与云端设置。桌面应用本地数据和您的 Google 账户不受影响。",
+    "Delete All Data": "清除全部数据",
+    "删除 All Data": "清除全部数据",
+    "Show All": "显示全部",
+    "显示 All": "显示全部",
+    "Give Feedback": "意见与反馈",
+    "Voice mode": "语音交互模式",
+    "Voice Mode": "语音交互模式",
+    "Voice engine": "语音生成引擎",
+    "The voice used in Voice mode. Powered by Gemini Live.": "语音交互模式使用的播报音色，由 Gemini Live 驱动。",
+    "Input device for voice mode and dictation.": "语音模式和听写输入的音频采集麦克风。",
+    "How loud Antigravity's voice is.": "Antigravity 语音播放的声音响度。",
+    "Microphone": "麦克风设备",
+    "Whatever the voice-engine-addr flag serves you.": "基于 voice-engine-addr 参数所连接的服务。",
+    "Default (Mendel)": "默认音色 (Mendel)",
+    "Mute Voice Mic": "静音语音麦克风",
+    "Mute Voice Speaker": "静音语音扬声器",
+    "Conversation Steps": "对话执行步骤",
+    "Choose how much detail is shown during a conversation.": "设置对话过程中呈现执行细节的详略程度。",
+    "Verbose": "详细输出模式",
+    "Contrast": "对比度",
+    "Strong": "高对比度",
+    "Font": "界面字体",
+    "Loading workspace customizations...": "正在加载工作区定制项...",
+    "Loading 工作区 customizations...": "正在加载工作区定制项...",
+    "No token data available.": "暂无 Token 消耗数据。",
+    "A label for this computer when you connect from another device. Changing it reconnects.": "从其他设备连接时的本地计算机标识名称。更改名称将重新建立连接。",
+    "远程控制 Issue": "远程控制问题",
+    "Reopen Closed Tab": "重新打开已关闭标签页",
+    "Move Conversation Up": "将当前会话上移",
+    "Move Conversation Down": "将当前会话下移",
+    "Previous Side Panel Tab": "切换至上一个侧边栏面板",
+    "Next Side Panel Tab": "切换至下一个侧边栏面板",
+    "Archive This Conversation": "归档当前会话",
+    "Toggle Side Panel": "展开/折叠侧边栏面板",
+    "Toggle Maximize Side Panel": "最大化/恢复侧边栏面板",
+    "Toggle Overview Panel": "展开/折叠概览面板",
+    "Developer-only tools. These settings do not affect other users.": "仅限开发者使用的调试工具。这些设置项不会影响其他常规配置。",
+    "This Computer": "本地计算机",
+    "Artifact Review Policy": "工件审核策略",
+    "计划审核 Policy": "工件审核策略",
+    "Controls permissions for remote conversations.": "控制远程协同会话的操作权限。",
+    "Configure what the agent can do in local and remote conversations.": "配置智能体在本地与远程会话中的操作执行权限。",
+
     // Top Bar & Menus
     "File": "文件",
     "Edit": "编辑",
@@ -2099,6 +2172,63 @@
       return text.replace(trimmed, stringCache.get(trimmed));
     }
 
+    // 特殊半中半英残缺短语与新版设置兜底修复
+    if (/^(?:打开\s*)?Links\s*In$/i.test(trimmed)) {
+      if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, '网页链接打开方式');
+      return text.replace(trimmed, '网页链接打开方式');
+    }
+    if (/^(?:显示\s*)?All$/i.test(trimmed)) {
+      if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, '显示全部');
+      return text.replace(trimmed, '显示全部');
+    }
+    if (/^(?:远程智能体\s*)?Data$/i.test(trimmed)) {
+      if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, '远程智能体数据');
+      return text.replace(trimmed, '远程智能体数据');
+    }
+    if (/^(?:删除\s*)?All\s*Data$/i.test(trimmed)) {
+      if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, '清除全部数据');
+      return text.replace(trimmed, '清除全部数据');
+    }
+    if (/^(?:计划审核\s*)?Policy$/i.test(trimmed)) {
+      if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, '工件审核策略');
+      return text.replace(trimmed, '工件审核策略');
+    }
+    if (/^Loading.*customizations/i.test(trimmed)) {
+      if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, '正在加载工作区定制项...');
+      return text.replace(trimmed, '正在加载工作区定制项...');
+    }
+    if (/^Type$/i.test(trimmed)) {
+      if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, '输入');
+      return text.replace(trimmed, '输入');
+    }
+    if (/^(?:and\s+choose|and\s+选择)$/i.test(trimmed)) {
+      if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, '并选择');
+      return text.replace(trimmed, '并选择');
+    }
+    if (/^to have the agent generate a plan\.?$/i.test(trimmed)) {
+      if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, '让智能体为您生成执行计划。');
+      return text.replace(trimmed, '让智能体为您生成执行计划。');
+    }
+    if (/^Configure allowed and denied URLs for the browser subagent/i.test(trimmed)) {
+      const fixed = '配置浏览器子智能体（通过 /browser 唤起）允许和禁止访问的网址规则。需要运行';
+      if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, fixed);
+      return text.replace(trimmed, fixed);
+    }
+    if (/^Send feedback as\s+(.*)$/i.test(trimmed)) {
+      const match = trimmed.match(/^Send feedback as\s+(.*)$/i);
+      const fixed = `以 ${match[1]} 身份发送反馈`;
+      if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, fixed);
+      return text.replace(trimmed, fixed);
+    }
+    if (/^(?:Browser\s*(?:子智能体|Subagent)|浏览器子智能体)$/i.test(trimmed)) {
+      if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, '浏览器子智能体');
+      return text.replace(trimmed, '浏览器子智能体');
+    }
+    if (/^远程控制\s*Issue$/i.test(trimmed)) {
+      if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, '远程控制问题');
+      return text.replace(trimmed, '远程控制问题');
+    }
+
     if (trimmed.includes('could not be opened')) {
       const replacedCouldNot = trimmed.replace(/could not be opened/gi, '无法打开');
       if (stringCache.size < MAX_STRING_CACHE) stringCache.set(trimmed, replacedCouldNot);
@@ -2769,6 +2899,12 @@
       if (translatedNodes.has(node)) return;
       const original = node.nodeValue;
       if (!original || !original.trim()) return;
+      const trimmed = original.trim();
+      if (trimmed === '浏览器子智能体' && node.parentElement && node.parentElement.tagName === 'SPAN' && node.parentElement.classList.contains('whitespace-pre-wrap')) {
+        node.nodeValue = '配置浏览器子智能体（通过 /browser 唤起）允许和禁止访问的网址规则。需要运行 ';
+        translatedNodes.add(node);
+        return;
+      }
       const translated = translateString(original);
       if (original !== translated) {
         node.nodeValue = translated;

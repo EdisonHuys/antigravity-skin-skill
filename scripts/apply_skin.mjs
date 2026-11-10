@@ -168,6 +168,7 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   return `
   /* --- Antigravity Warm Golden Dream Skin: Light Frosted Glass & Aux Pane Glass --- */
   :root, .dark, body {
+    --shell-canvas: transparent !important;
     --color-background: transparent !important;
     --background: transparent !important;
     --sidebar: rgba(255, 255, 255, 0.05) !important;
@@ -211,6 +212,8 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     background-color: transparent !important;
   }
   #root, #root > div,
+  .agy-shell, .agy-shell > div,
+  .agy-inset-shell, [class*="agy-inset-shell"], [class*="--shell-canvas"],
   .bg-background, [class*="bg-background"],
   div[class*="overflow-hidden"]:not([class*="bg-card"]):not([class*="bottom-full"]), div[class*="h-screen w-screen"],
   div[class*="flex-1 flex min-h-0"], div[class*="h-full w-full"],
@@ -969,6 +972,24 @@ async function main() {
   let focusX = options.focusX;
   let focusY = options.focusY;
 
+  // 若未指定主题或图片，优先尝试读取已激活的主题配置
+  const activeThemePath = path.join(__dirname, "../active_theme.json");
+  if (!options.theme && !options.image && fs.existsSync(activeThemePath)) {
+    try {
+      const activeMeta = JSON.parse(fs.readFileSync(activeThemePath, "utf8"));
+      if (activeMeta && (activeMeta.theme || activeMeta.image)) {
+        if (activeMeta.theme) options.theme = activeMeta.theme;
+        if (activeMeta.image) options.image = activeMeta.image;
+        if (activeMeta.name) themeName = activeMeta.name;
+        if (activeMeta.tagline) tagline = activeMeta.tagline;
+        if (activeMeta.focusX != null) focusX = activeMeta.focusX;
+        if (activeMeta.focusY != null) focusY = activeMeta.focusY;
+        if (activeMeta.blur != null && options.blur === 16) options.blur = activeMeta.blur;
+        if (activeMeta.opacity != null && options.opacity === 0.18) options.opacity = activeMeta.opacity;
+      }
+    } catch (e) {}
+  }
+
   if (options.theme) {
     const themeDir = path.resolve(__dirname, "../themes", options.theme);
     if (!fs.existsSync(themeDir)) {
@@ -1060,6 +1081,8 @@ async function main() {
         // 1. Remove old skin & test styles
         const oldStyle = document.getElementById("antigravity-dream-skin-style");
         if (oldStyle) oldStyle.remove();
+        const patchShell = document.getElementById("patch-shell-canvas");
+        if (patchShell) patchShell.remove();
         const testStyle = document.getElementById("test-fix-style");
         if (testStyle) testStyle.remove();
         const testShield = document.getElementById("test-sticky-shield");
@@ -1086,6 +1109,77 @@ async function main() {
         if (!window.__antigravity_zh_installed) {
           window.__antigravity_zh_installed = true;
           const zhDict = {
+            "Interface Layout": "界面布局模式",
+            "Knowledge Work": "知识工作模式",
+            "Simplified interface for research, writing, and everyday tasks.": "适用于资料调研、文字写作与日常事务的轻量简约界面。",
+            "Software Engineering": "软件工程模式",
+            "Full interface for coding, developer tools, and managing agents.": "包含代码编写、开发者工具链与智能体协同管理的完整专业界面。",
+            "Enable Sounds for Agent": "启用智能体提示音",
+            "Play a sound when your action is needed or the agent finishes.": "当需要您确认操作或智能体完成任务时播放提示音。",
+            "Volume": "提示声音量",
+            "Set the volume of agent sounds.": "设置智能体提示音的音量大小。",
+            "Sound": "声音提示",
+            "Built-in Browser": "内置浏览器",
+            "Open Links In": "网页链接打开方式",
+            "打开 Links In": "网页链接打开方式",
+            "Choose where links open by default when clicked.": "设置在对话中点击网页链接时的默认打开方式。",
+            "External Browser": "外部默认浏览器",
+            "Download Location": "下载存储位置",
+            "Folder where files downloaded in the built-in browser are saved.": "内置浏览器中下载文件时默认保存的本地文件夹。",
+            "Browsing History": "浏览历史记录",
+            "Clear visited URLs and autocomplete suggestions from the built-in browser.": "清理内置浏览器中访问过的网址记录与输入建议。",
+            "Enable Notifications for Agent": "启用智能体桌面通知",
+            "Show system notifications when your action is needed or the agent finishes.": "当需要您确认操作或智能体完成任务时，显示系统桌面通知。",
+            "Browser Subagent": "浏览器子智能体",
+            "Browser 子智能体": "浏览器子智能体",
+            "Configure built-in browser, link opening, and browser subagent preferences.": "配置内置浏览器、外部链接打开策略以及浏览器子智能体偏好。",
+            "Configure allowed and denied URLs for the browser subagent (invoked with /browser). Requires": "配置浏览器子智能体（通过 /browser 唤起）允许和禁止访问的网址规则。需要",
+            "Remote Agents Data": "远程智能体数据",
+            "远程智能体 Data": "远程智能体数据",
+            "Delete All Remote Agents Data": "清除所有远程智能体数据",
+            "Permanently delete your remote conversations, projects, scheduled tasks, connected plugins and settings. Data in the desktop app and your Google account are not affected.": "永久删除您的远程会话、项目、定时任务、已连接插件与云端设置。桌面应用本地数据和您的 Google 账户不受影响。",
+            "Delete All Data": "清除全部数据",
+            "删除 All Data": "清除全部数据",
+            "Show All": "显示全部",
+            "显示 All": "显示全部",
+            "Give Feedback": "意见与反馈",
+            "Voice mode": "语音交互模式",
+            "Voice Mode": "语音交互模式",
+            "Voice engine": "语音生成引擎",
+            "The voice used in Voice mode. Powered by Gemini Live.": "语音交互模式使用的播报音色，由 Gemini Live 驱动。",
+            "Input device for voice mode and dictation.": "语音模式和听写输入的音频采集麦克风。",
+            "How loud Antigravity's voice is.": "Antigravity 语音播放的声音响度。",
+            "Microphone": "麦克风设备",
+            "Whatever the voice-engine-addr flag serves you.": "基于 voice-engine-addr 参数所连接的服务。",
+            "Default (Mendel)": "默认音色 (Mendel)",
+            "Mute Voice Mic": "静音语音麦克风",
+            "Mute Voice Speaker": "静音语音扬声器",
+            "Conversation Steps": "对话执行步骤",
+            "Choose how much detail is shown during a conversation.": "设置对话过程中呈现执行细节的详略程度。",
+            "Verbose": "详细输出模式",
+            "Contrast": "对比度",
+            "Strong": "高对比度",
+            "Font": "界面字体",
+            "Loading workspace customizations...": "正在加载工作区定制项...",
+            "Loading 工作区 customizations...": "正在加载工作区定制项...",
+            "No token data available.": "暂无 Token 消耗数据。",
+            "A label for this computer when you connect from another device. Changing it reconnects.": "从其他设备连接时的本地计算机标识名称。更改名称将重新建立连接。",
+            "远程控制 Issue": "远程控制问题",
+            "Reopen Closed Tab": "重新打开已关闭标签页",
+            "Move Conversation Up": "将当前会话上移",
+            "Move Conversation Down": "将当前会话下移",
+            "Previous Side Panel Tab": "切换至上一个侧边栏面板",
+            "Next Side Panel Tab": "切换至下一个侧边栏面板",
+            "Archive This Conversation": "归档当前会话",
+            "Toggle Side Panel": "展开/折叠侧边栏面板",
+            "Toggle Maximize Side Panel": "最大化/恢复侧边栏面板",
+            "Toggle Overview Panel": "展开/折叠概览面板",
+            "Developer-only tools. These settings do not affect other users.": "仅限开发者使用的调试工具。这些设置项不会影响其他常规配置。",
+            "This Computer": "本地计算机",
+            "Artifact Review Policy": "工件审核策略",
+            "计划审核 Policy": "工件审核策略",
+            "Controls permissions for remote conversations.": "控制远程协同会话的操作权限。",
+            "Configure what the agent can do in local and remote conversations.": "配置智能体在本地与远程会话中的操作执行权限。",
             "New Conversation": "新建会话",
             "Conversation History": "历史会话",
             "Conversations": "会话列表",
@@ -1164,8 +1258,30 @@ async function main() {
               const val = node.nodeValue;
               if (!val) return;
               const trimmed = val.trim();
+              if (trimmed === '浏览器子智能体' && node.parentElement && node.parentElement.tagName === 'SPAN' && node.parentElement.classList.contains('whitespace-pre-wrap')) {
+                node.nodeValue = '配置浏览器子智能体（通过 /browser 唤起）允许和禁止访问的网址规则。需要运行 ';
+                return;
+              }
               if (zhDict[trimmed]) {
                 node.nodeValue = val.replace(trimmed, zhDict[trimmed]);
+              } else if (/^(?:打开\s*)?Links\s*In$/i.test(trimmed)) {
+                node.nodeValue = val.replace(trimmed, "网页链接打开方式");
+              } else if (/^(?:显示\s*)?All$/i.test(trimmed)) {
+                node.nodeValue = val.replace(trimmed, "显示全部");
+              } else if (/^(?:远程智能体\s*)?Data$/i.test(trimmed)) {
+                node.nodeValue = val.replace(trimmed, "远程智能体数据");
+              } else if (/^(?:删除\s*)?All\s*Data$/i.test(trimmed)) {
+                node.nodeValue = val.replace(trimmed, "清除全部数据");
+              } else if (/^(?:计划审核\s*)?Policy$/i.test(trimmed)) {
+                node.nodeValue = val.replace(trimmed, "工件审核策略");
+              } else if (/^Type$/i.test(trimmed)) {
+                node.nodeValue = val.replace(trimmed, "输入");
+              } else if (/^(?:and\s+choose|and\s+选择)$/i.test(trimmed)) {
+                node.nodeValue = val.replace(trimmed, "并选择");
+              } else if (/^to have the agent generate a plan\.?$/i.test(trimmed)) {
+                node.nodeValue = val.replace(trimmed, "让智能体为您生成执行计划。");
+              } else if (/^Configure allowed and denied URLs for the browser subagent/i.test(trimmed)) {
+                node.nodeValue = val.replace(trimmed, "配置浏览器子智能体（通过 /browser 唤起）允许和禁止访问的网址规则。需要运行");
               } else if (trimmed.startsWith("Worked for ")) {
                 node.nodeValue = val.replace("Worked for ", "用时 ").replace("s", "秒").replace("m", "分");
               } else if (trimmed.startsWith("Thought for ")) {
