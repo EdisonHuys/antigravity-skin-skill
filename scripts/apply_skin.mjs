@@ -186,7 +186,7 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     --secondary-foreground: #ffffff !important;
   }
 
-  /* 1. 全景壁纸 */
+  /* 1. 全景壁纸 (硬件隔离独立合成层) */
   #antigravity-dream-skin-bg {
     position: fixed !important;
     top: 0 !important;
@@ -199,6 +199,11 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     background-size: cover !important;
     background-position: ${fx}% ${fy}% !important;
     background-repeat: no-repeat !important;
+    transform: translate3d(0, 0, 0) !important;
+    backface-visibility: hidden !important;
+    perspective: 1000px !important;
+    will-change: transform !important;
+    contain: strict !important;
   }
 
   /* 2. 全局底色透明化：中间主工作区 100% 纯净透亮，无弹出时直现高清壁纸 */
@@ -229,14 +234,14 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     -webkit-backdrop-filter: none !important;
   }
 
-  /* 3. 左侧边栏：轻透磨砂毛玻璃与暖金色微光 */
+  /* 3. 左侧边栏：轻透磨砂毛玻璃与暖金色微光 (独立合成层) */
   div.bg-sidebar.h-full, aside, nav[aria-label="Sidebar"] {
-    background: rgba(18, 14, 24, 0.40) !important;
-    background-color: rgba(18, 14, 24, 0.40) !important;
-    backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    -webkit-backdrop-filter: blur(${blur}px) saturate(130%) !important;
+    background: rgba(18, 14, 24, 0.60) !important;
+    background-color: rgba(18, 14, 24, 0.60) !important;
     border-right: 1px solid rgba(255, 222, 190, 0.18) !important;
-    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.20) !important;
+    transform: translate3d(0, 0, 0) !important;
+    contain: paint !important;
   }
 
   .bg-sidebar div, .bg-sidebar section, .bg-sidebar ul, .bg-sidebar li,
@@ -322,11 +327,12 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     width: 100% !important;
   }
 
-  /* 滚动视口安全设置：保持视口顶部与底部自如滚动 */
+  /* 滚动视口安全设置：隔离重绘边界，保持自如滚动 */
   div[class*="overflow-y-auto"][class*="md-table-bleed"],
   div.isolate.overflow-y-auto {
     scroll-padding-top: 52px !important;
     padding-bottom: 0px !important;
+    contain: layout style !important;
   }
   div[class*="md-table-bleed"] > div[class*="mx-auto"] {
     padding-top: 8px !important;
@@ -340,11 +346,11 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     opacity: 0 !important;
   }
 
-  /* 4.1 用户提问气泡原生独立悬浮吸顶 (Floating Glass Capsule)：
+  /* 4.1 用户提问气泡原生独立悬浮吸顶 (Floating Glass Shield)：
      - 恢复原生 position: sticky 吸顶效果，长内容向下滚动时提问卡片优雅悬浮吸附于视口顶端；
      - 彻底消除横跨全屏的死硬通栏横条（md-sticky-message-bleed 100% 透明），全景壁纸通透无遮切；
      - 提问气泡与紧随其后的回复内容保持充裕的 24px 呼吸间距，杜绝任何压字截断现象；
-     - 提问卡片呈现精致圆角毛玻璃药丸质感，微光切边，纯白立体字。 */
+     - 采用高性能微光双层暗金渐变玻璃，彻底移除高耗能 backdrop-filter: blur，零 GPU 损耗，彻底告别打字卡顿！ */
   div.sticky.top-0,
   div[role="article"][aria-label="用户消息"],
   div[role="article"][aria-label="User message"],
@@ -399,13 +405,14 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   }
   div[class*="group/user-input-step"] div[class*="bg-card"],
   div[data-testid="user-input-step"] div[class*="bg-card"] {
-    background: rgba(22, 16, 28, 0.50) !important;
-    background-color: rgba(22, 16, 28, 0.50) !important;
-    backdrop-filter: blur(20px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
-    border: 1px solid rgba(255, 222, 190, 0.28) !important;
+    background: linear-gradient(135deg, rgba(28, 22, 34, 0.88) 0%, rgba(18, 14, 24, 0.94) 100%) !important;
+    background-color: rgba(22, 18, 28, 0.90) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 222, 190, 0.32) !important;
     border-radius: 14px !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.20) !important;
+    transform: translate3d(0, 0, 0) !important;
   }
   div[class*="group/user-input-step"] div[class*="bg-card"] div {
     background: transparent !important;
@@ -423,31 +430,33 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     border: 1px solid rgba(255, 222, 190, 0.25) !important;
   }
 
-  /* 6. Artifact 工件卡片：极度轻透磨砂毛玻璃 */
+  /* 6. Artifact 工件卡片：高性能轻透双层微光 (零模糊GPU开销) */
   .artifact-card, div[class*="artifact-card"] {
-    background: rgba(18, 14, 24, 0.28) !important;
-    background-color: rgba(18, 14, 24, 0.28) !important;
-    backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    -webkit-backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    border: 1px solid rgba(255, 222, 190, 0.22) !important;
+    background: rgba(18, 14, 24, 0.72) !important;
+    background-color: rgba(18, 14, 24, 0.72) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 222, 190, 0.24) !important;
     border-radius: 12px !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    transform: translate3d(0, 0, 0) !important;
   }
   .artifact-card *, div[class*="artifact-card"] * {
     color: #ffffff !important;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75) !important;
   }
 
-  /* 7. 底部输入框：左右两边同款单层极轻透磨砂毛玻璃，微光切边，杜绝死黑硬块 */
+  /* 7. 底部输入框：左右两边同款单层极轻透磨砂微光切边 (零模糊GPU开销) */
   #antigravity\\.agentSidePanelInputBox,
   div[id="antigravity.agentSidePanelInputBox"] {
-    background: rgba(18, 14, 24, 0.28) !important;
-    background-color: rgba(18, 14, 24, 0.28) !important;
-    backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    -webkit-backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    border: 1px solid rgba(255, 222, 190, 0.26) !important;
+    background: rgba(18, 14, 24, 0.75) !important;
+    background-color: rgba(18, 14, 24, 0.75) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 222, 190, 0.28) !important;
     border-radius: 16px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+    transform: translate3d(0, 0, 0) !important;
   }
   #antigravity\\.agentSidePanelInputBox form,
   div[id="antigravity.agentSidePanelInputBox"] form,
@@ -562,15 +571,16 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
   }
 
-  /* pre 容器单层优雅微光毛玻璃，内部 pre code 100% 透明，杜绝双层叠加黑块 */
+  /* pre 容器单层优雅微光半透明，内部 pre code 100% 透明，彻底杜绝流式打字与命令输出重绘卡顿 */
   pre, [class*="group/run-command"] {
-    background: rgba(18, 14, 24, 0.25) !important;
-    background-color: rgba(18, 14, 24, 0.25) !important;
-    backdrop-filter: blur(12px) saturate(130%) !important;
-    -webkit-backdrop-filter: blur(12px) saturate(130%) !important;
-    border: 1px solid rgba(255, 222, 190, 0.20) !important;
+    background: rgba(18, 14, 24, 0.75) !important;
+    background-color: rgba(18, 14, 24, 0.75) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 222, 190, 0.22) !important;
     border-radius: 12px !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+    transform: translate3d(0, 0, 0) !important;
   }
   pre code, pre div, pre span {
     background: transparent !important;
@@ -609,16 +619,16 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
   }
 
-  /* 10. 交互问答（Ask Question / Permission 弹窗）选项卡片：左右同款轻透磨砂毛玻璃 */
+  /* 10. 交互问答（Ask Question / Permission 弹窗）选项卡片：零模糊高性能微光 */
   div[class*="rounded-2xl"][class*="bg-card-border"],
   div[class*="bg-card"][class*="rounded-"] {
-    background: rgba(18, 14, 24, 0.38) !important;
-    background-color: rgba(18, 14, 24, 0.38) !important;
-    backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    -webkit-backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    border: 1px solid rgba(255, 222, 190, 0.20) !important;
+    background: rgba(18, 14, 24, 0.75) !important;
+    background-color: rgba(18, 14, 24, 0.75) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 222, 190, 0.22) !important;
     border-radius: 16px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
   }
   div[class*="bg-card-border"] span,
   div[class*="bg-card-border"] p,
@@ -811,12 +821,14 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
      ========================================================================= */
   .relative.z-0.flex-1.flex.min-h-0.h-full > .relative.flex.w-full.h-full.outline-none > div:has([data-tooltip-id*="aux-tab"]),
   div[data-pane-id]:not([data-pane-id="pane-1"]) {
-    background: rgba(18, 14, 24, 0.40) !important;
-    background-color: rgba(18, 14, 24, 0.40) !important;
-    backdrop-filter: blur(${blur}px) saturate(130%) !important;
-    -webkit-backdrop-filter: blur(${blur}px) saturate(130%) !important;
+    background: rgba(18, 14, 24, 0.65) !important;
+    background-color: rgba(18, 14, 24, 0.65) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border-left: 1px solid rgba(255, 222, 190, 0.18) !important;
-    box-shadow: -2px 0 16px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: -2px 0 16px rgba(0, 0, 0, 0.20) !important;
+    transform: translate3d(0, 0, 0) !important;
+    contain: paint !important;
   }
 
   /* 辅助窗格内部多层容器全部保持透明，杜绝多层叠加导致的黑色死块 */
@@ -883,10 +895,10 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
      解决左侧栏 Hover 卡片（如“PC与小程序代办同步”）背景发灰字迹不清问题
      ========================================================================= */
   .settings-modal-backdrop,
-  div[class*="backdrop"] {
-    background: rgba(0, 0, 0, 0.25) !important;
-    backdrop-filter: blur(6px) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
+  [data-radix-portal] > div[class*="backdrop"] {
+    background: rgba(0, 0, 0, 0.45) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   [role="dialog"],

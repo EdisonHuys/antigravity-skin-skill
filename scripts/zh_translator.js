@@ -3055,6 +3055,46 @@
     }
   }
 
+  // 极速判别是否属于流式对话、思考流或终端输出节点（纳秒级短路剪枝，杜绝打字主线程卡顿）
+  function isFastDynamicNode(node) {
+    if (!node) return true;
+    let el = node.nodeType === 1 ? node : node.parentElement;
+    if (!el) return true;
+    const tag = el.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'CODE' || tag === 'PRE' || tag === 'SCRIPT' || tag === 'STYLE') return true;
+
+    while (el && el !== document.body) {
+      if (skipCache.has(el)) {
+        if (skipCache.get(el)) return true;
+      }
+      if (el.getAttribute) {
+        const testId = el.getAttribute('data-testid');
+        if (testId && (testId.includes('conversation') || testId.includes('chat') || testId.includes('user-input') || testId.includes('agent-response') || testId.includes('thinking-content') || testId.includes('virtuoso'))) {
+          skipCache.set(el, true);
+          return true;
+        }
+        const role = el.getAttribute('role');
+        if (role === 'article' || role === 'log' || role === 'textbox') {
+          skipCache.set(el, true);
+          return true;
+        }
+      }
+      if (el.classList) {
+        if (el.classList.contains('group/user-input-step') ||
+            el.classList.contains('cursor-edit') ||
+            el.classList.contains('thought-content') ||
+            el.classList.contains('thinking-content') ||
+            el.classList.contains('monaco-editor') ||
+            el.classList.contains('md-table-bleed')) {
+          skipCache.set(el, true);
+          return true;
+        }
+      }
+      el = el.parentElement;
+    }
+    return false;
+  }
+
   function observeRoot(root) {
     if (!root || observedRoots.has(root)) return;
     observedRoots.add(root);
@@ -3070,15 +3110,24 @@
             if (node.shadowRoot) {
               observeRoot(node.shadowRoot);
             }
+            if (isFastDynamicNode(node)) {
+              continue;
+            }
             pendingAddedNodes.add(node);
             needsSchedule = true;
           }
         } else if (mutation.type === 'characterData') {
+          if (isFastDynamicNode(mutation.target)) {
+            continue;
+          }
           translatedNodes.delete(mutation.target);
           pendingTextNodes.add(mutation.target);
           needsSchedule = true;
         } else if (mutation.type === 'attributes') {
           const target = mutation.target;
+          if (isFastDynamicNode(target)) {
+            continue;
+          }
           let attrSet = pendingAttrNodes.get(target);
           if (!attrSet) {
             attrSet = new Set();
