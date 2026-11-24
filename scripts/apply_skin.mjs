@@ -219,8 +219,10 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   #root, #root > div,
   .agy-shell, .agy-shell > div,
   .agy-inset-shell, [class*="agy-inset-shell"], [class*="--shell-canvas"],
-  .bg-background, [class*="bg-background"],
-  div[class*="overflow-hidden"]:not([class*="bg-card"]):not([class*="bottom-full"]), div[class*="h-screen w-screen"],
+  .bg-background:not([role="dialog"]):not([aria-modal="true"]):not([class*="modal"]):not([class*="dialog"]):not([data-state]),
+  [class*="bg-background"]:not([role="dialog"]):not([aria-modal="true"]):not([class*="modal"]):not([class*="dialog"]):not([data-state]),
+  div[class*="overflow-hidden"]:not([class*="bg-card"]):not([class*="bottom-full"]):not([role="dialog"]):not([aria-modal="true"]):not([class*="modal"]):not([class*="dialog"]):not([class*="fixed"]),
+  div[class*="h-screen w-screen"],
   div[class*="flex-1 flex min-h-0"], div[class*="h-full w-full"],
   .relative.z-0.flex-1.flex.min-h-0.h-full,
   .relative.z-0.flex-1.flex.min-h-0.h-full > div,
@@ -891,48 +893,62 @@ function generateCss({ bgDataUri, focusX, focusY, blur, opacity }) {
   }
 
   /* =========================================================================
-     13. 弹窗、模态框、悬浮卡片 (Hover Card / Tooltip) 与下拉菜单
-     解决左侧栏 Hover 卡片（如“PC与小程序代办同步”）背景发灰字迹不清问题
+     13. 弹窗、设置模态框、悬浮卡片 (Hover Card / Tooltip) 与下拉菜单
+     高不透明度深邃磨砂底色 + 全屏背景柔焦压暗，彻底隔绝底层聊天文字穿透，保证极佳阅读性
      ========================================================================= */
-  .settings-modal-backdrop,
-  [data-radix-portal] > div[class*="backdrop"] {
-    background: rgba(0, 0, 0, 0.45) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+  html body .settings-modal-backdrop,
+  html body [data-radix-portal] > div[class*="backdrop"],
+  html body [data-radix-portal] > div[class*="fixed"][class*="inset-0"]:not([role="dialog"]),
+  html body div[class*="fixed"][class*="inset-0"][class*="bg-black"],
+  html body div[class*="fixed"][class*="inset-0"][class*="z-50"]:has([role="dialog"]),
+  html body div[class*="fixed"][class*="inset-0"]:has(div[class*="overflow-hidden"][class*="rounded-"]) {
+    background: rgba(8, 6, 14, 0.62) !important;
+    background-color: rgba(8, 6, 14, 0.62) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
   }
 
-  [role="dialog"],
-  [aria-modal="true"],
-  .settings-modal-container,
-  div[class*="settings-modal-container"],
-  div[class*="modal-container"],
-  div[role="dialog"].bg-background,
-  div[aria-modal="true"].bg-background {
-    background: rgba(26, 20, 32, 0.70) !important;
-    background-color: rgba(26, 20, 32, 0.70) !important;
-    backdrop-filter: blur(28px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  html body [role="dialog"],
+  html body [aria-modal="true"],
+  html body div[role="dialog"][class*="overflow-hidden"],
+  html body div[aria-modal="true"][class*="overflow-hidden"],
+  html body div[role="dialog"].bg-background,
+  html body div[aria-modal="true"].bg-background,
+  html body .settings-modal-container,
+  html body div[class*="settings-modal-container"],
+  html body div[class*="modal-container"],
+  html body div[class*="fixed"][class*="inset-0"] > div[class*="overflow-hidden"][class*="rounded-"] {
+    background: rgba(18, 15, 24, 0.92) !important;
+    background-color: rgba(18, 15, 24, 0.92) !important;
+    backdrop-filter: blur(32px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(32px) saturate(140%) !important;
     border: 1px solid rgba(255, 222, 190, 0.30) !important;
     border-radius: 16px !important;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 222, 190, 0.15) !important;
+    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.68), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
   }
 
-  /* 弹窗内部左侧导航与分割线 */
-  [role="dialog"] div[class*="bg-sidebar"],
-  [role="dialog"] div[class*="border-r"] {
-    background: rgba(14, 10, 20, 0.28) !important;
-    background-color: rgba(14, 10, 20, 0.28) !important;
-    border-color: rgba(255, 222, 190, 0.20) !important;
+  /* 设置弹窗内部左侧导航与分割线：清晰分区层次 */
+  html body [role="dialog"] div[class*="bg-sidebar"],
+  html body [role="dialog"] div[class*="border-r"],
+  html body [aria-modal="true"] div[class*="border-r"],
+  html body div[class*="fixed"][class*="inset-0"] > div[class*="overflow-hidden"][class*="rounded-"] div[class*="border-r"] {
+    background: rgba(12, 10, 18, 0.55) !important;
+    background-color: rgba(12, 10, 18, 0.55) !important;
+    border-color: rgba(255, 222, 190, 0.18) !important;
   }
 
-  [role="dialog"] * {
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75) !important;
+  html body [role="dialog"] *,
+  html body [aria-modal="true"] * {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.60) !important;
   }
 
-  [role="dialog"] button,
-  [role="dialog"] [role="button"],
-  [role="dialog"] select,
-  [role="dialog"] input {
+  html body [role="dialog"] button,
+  html body [role="dialog"] [role="button"],
+  html body [role="dialog"] select,
+  html body [role="dialog"] input,
+  html body [aria-modal="true"] button,
+  html body [aria-modal="true"] select,
+  html body [aria-modal="true"] input {
     color: #ffffff !important;
   }
 
