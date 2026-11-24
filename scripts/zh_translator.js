@@ -1890,6 +1890,23 @@
     "Go to General settings": "前往常规设置",
     "Models & Usage": "模型配额与用量",
     "Manage your model quota and credits.": "管理您的模型配额与个人 AI 点数。",
+    "See Activity": "查看明细",
+    "Get More AI Credits": "获取更多 AI 点数",
+    "Orchestrator Settings": "编排调度设置 (Orchestrator)",
+    "Orchestrator 设置": "编排调度设置 (Orchestrator)",
+    "Choose the models Orchestrator uses. A larger, smarter orchestrator model with a faster, cheaper executor gives high quality for fewer tokens.": "选择编排调度所使用的模型组合。使用更强大的编排模型搭配更快速低成本的执行模型，可在消耗更少 Token 的同时获得高质量结果。",
+    "Orchestrator Model": "编排模型 (Orchestrator)",
+    "Orchestrator 模型": "编排模型 (Orchestrator)",
+    "Plans the work, makes design decisions, and reviews the result. Pick a top-tier model. You can also pick one per conversation from the Orchestrator row in the model menu.": "负责规划任务、制定架构设计决策并审查结果，建议选择旗舰级模型。您也可以在模型菜单的编排行中为每个会话单独指定。",
+    "Executor Model": "执行模型 (Executor)",
+    "Executor 模型": "执行模型 (Executor)",
+    "Carries out the plan: searches, edits, builds, and tests. Pick a faster, cheaper model.": "负责落地执行方案：代码检索、文件编辑、编译构建与测试验证，建议选择响应更快、成本更低的模型。",
+    "Input Box": "输入框",
+    "输入 Box": "输入框",
+    "Choose which key sends a message in the chat composer.": "选择在聊天输入框中用于发送消息的快捷键。",
+    "Press Cmd+Enter to send, Enter for a new line.": "按 Cmd+Enter 发送消息，按 Enter 换行。",
+    "Press Enter to send, Shift+Enter for a new line.": "按 Enter 发送消息，按 Shift+Enter 换行。",
+    "Press Ctrl+Enter to send, Enter for a new line.": "按 Ctrl+Enter 发送消息，按 Enter 换行。",
     "Show Selection Actions": "显示划词快捷操作",
     "Show Selection Actions when selecting text": "选中文本时显示划词操作",
     'Show "Edit" and "Chat" buttons when selecting text in the editor.': '在编辑器中选中代码或文本时，浮动显示“编辑”与“聊天”快捷按钮。',
@@ -2476,6 +2493,11 @@
     // 模型配额剩余动态匹配 (例如 "100% Remaining", "85.4% remaining")
     if (/^(\d+(?:\.\d+)?%?)\s+remaining$/i.test(trimmed)) {
       dynamicMatch = dynamicMatch.replace(/^(\d+(?:\.\d+)?%?)\s+remaining$/i, '$1 剩余');
+      isDynamic = true;
+    }
+    // 可用 AI 点数动态匹配 (例如 "Available AI Credits: 0")
+    if (/^Available AI Credits:\s*(.*)$/i.test(trimmed)) {
+      dynamicMatch = dynamicMatch.replace(/^Available AI Credits:\s*(.*)$/i, '可用 AI 点数：$1');
       isDynamic = true;
     }
     // 剩余时间刷新动态匹配 (例如 "15 minutes", "1 hour 26 minutes", "2 hours", "1 day")
